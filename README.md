@@ -33,6 +33,8 @@ Sau khi xử lý, vùng **Kết quả** hiển thị dữ liệu mã hóa dạng
 
 Giao diện chạy mã hóa trong luồng nền, có hiệu ứng tiến trình và mô phỏng đường truyền. Sau giải mã, ảnh được hiển thị trực tiếp, video/âm thanh có nút phát, văn bản hiện nội dung và tệp khác hiện HEX.
 
+Toàn bộ tệp được mã hóa/giải mã theo từng khối 1 MB. Giới hạn 8 KB chỉ dành cho vùng xem trước HEX trong giao diện, không phải giới hạn dữ liệu được mã hóa.
+
 ## Kiến trúc module
 
 - `cryptoengine`: định dạng FCQ2, dẫn xuất khóa, mã hóa, xác thực và giải mã streaming.
