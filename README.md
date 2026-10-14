@@ -1,14 +1,16 @@
 # FileCryptoQt
 
-Ứng dụng Qt 6/C++ mã hóa và giải mã mọi loại tệp (văn bản, hình ảnh, video) bằng OpenSSL.
+Ứng dụng Qt 6/C++ mã hóa và giải mã mọi loại tệp bằng OpenSSL, có xem trước riêng cho văn bản, hình ảnh, video và dữ liệu nhị phân.
 
 ## Thuật toán
 
-- AES-256-CBC
+- AES-256-CBC + HMAC-SHA256 (encrypt-then-MAC)
 - AES-256-GCM
 - ChaCha20-Poly1305
 
-Khóa 256-bit được dẫn xuất từ mật khẩu bằng PBKDF2-HMAC-SHA256 với salt ngẫu nhiên và 200.000 vòng. GCM và ChaCha20-Poly1305 kiểm tra tính toàn vẹn của dữ liệu bằng thẻ xác thực.
+Khóa được dẫn xuất từ mật khẩu bằng PBKDF2-HMAC-SHA256 với salt ngẫu nhiên và 200.000 vòng. Cả ba chế độ đều kiểm tra tính toàn vẹn: GCM và ChaCha20-Poly1305 dùng thẻ AEAD; CBC dùng khóa HMAC riêng. Metadata (tên, MIME, thuật toán) cũng được xác thực.
+
+Định dạng `FCQ2` lưu tên và loại tệp gốc để khôi phục đúng phần mở rộng. Ứng dụng vẫn đọc được tệp `FCQ1` đã tạo bởi phiên bản trước.
 
 ## Biên dịch
 
@@ -28,5 +30,14 @@ Giao diện nằm trong `mainwindow.ui`; mở tệp này bằng Qt Designer đ�
 4. Muốn khôi phục, chọn tệp `.fcq`, nhập đúng mật khẩu rồi nhấn **Giải mã**.
 
 Sau khi xử lý, vùng **Kết quả** hiển thị dữ liệu mã hóa dạng HEX hoặc nội dung văn bản vừa giải mã. Hai nút bên dưới cho phép mở tệp kết quả và thư mục chứa tệp.
+
+Giao diện chạy mã hóa trong luồng nền, có hiệu ứng tiến trình và mô phỏng đường truyền. Sau giải mã, ảnh được hiển thị trực tiếp, video/âm thanh có nút phát, văn bản hiện nội dung và tệp khác hiện HEX.
+
+## Kiến trúc module
+
+- `cryptoengine`: định dạng FCQ2, dẫn xuất khóa, mã hóa, xác thực và giải mã streaming.
+- `filepreview`: phân loại MIME và xem trước văn bản/ảnh/video/tệp nhị phân.
+- `transmissionwidget`: mô phỏng tệp gốc, thuật toán, kênh truyền và dữ liệu phía nhận.
+- `mainwindow`: điều phối giao diện, tác vụ nền và trạng thái tiến trình.
 
 Không xóa tệp gốc trước khi đã thử giải mã và kiểm tra kết quả.

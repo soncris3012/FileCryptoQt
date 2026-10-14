@@ -5,104 +5,35 @@
 #include <QDesktopServices>
 #include <QDragEnterEvent>
 #include <QDropEvent>
-#include <QFile>
 #include <QFileDialog>
 #include <QFileInfo>
+#include <QFutureWatcher>
 #include <QMessageBox>
 #include <QMimeData>
+#include <QTimer>
 #include <QUrl>
+#include <QtConcurrent>
 
-MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWindow) {
-    ui->setupUi(this);
-    setAcceptDrops(true);
-    ui->algorithmBox->addItem("AES-256-CBC", int(CryptoEngine::Algorithm::Aes256Cbc));
-    ui->algorithmBox->addItem("AES-256-GCM", int(CryptoEngine::Algorithm::Aes256Gcm));
-    ui->algorithmBox->addItem("ChaCha20-Poly1305", int(CryptoEngine::Algorithm::ChaCha20Poly1305));
-    ui->algorithmBox->setCurrentIndex(1);
-    connect(ui->inputButton, &QPushButton::clicked, this, &MainWindow::chooseInput);
-    connect(ui->outputButton, &QPushButton::clicked, this, &MainWindow::chooseOutput);
-    connect(ui->encryptButton, &QPushButton::clicked, this, &MainWindow::encrypt);
-    connect(ui->decryptButton, &QPushButton::clicked, this, &MainWindow::decrypt);
-    connect(ui->inputEdit, &QLineEdit::textChanged, this, &MainWindow::updateSuggestion);
-    connect(ui->openResultButton, &QPushButton::clicked, this, &MainWindow::openResult);
-    connect(ui->openFolderButton, &QPushButton::clicked, this, &MainWindow::openResultFolder);
+MainWindow::MainWindow(QWidget*p):QMainWindow(p),ui(new Ui::MainWindow),m_watcher(new QFutureWatcher<QVariantMap>(this)),m_loadingTimer(new QTimer(this)){
+ ui->setupUi(this);setAcceptDrops(true);ui->previewSplitter->setSizes({500,500});
+ ui->algorithmBox->addItem("AES-256-GCM",int(CryptoEngine::Algorithm::Aes256Gcm));ui->algorithmBox->addItem("ChaCha20-Poly1305",int(CryptoEngine::Algorithm::ChaCha20Poly1305));ui->algorithmBox->addItem("AES-256-CBC + HMAC",int(CryptoEngine::Algorithm::Aes256Cbc));
+ setStyleSheet(R"(*{font-family:"Arial";font-size:13px;color:#e3e9f1}QMainWindow,QWidget{background:#202630}QWidget#controlPanel{background:#181d25}QLabel#titleLabel{font-size:26px;font-weight:800;color:#66b1ff}QLabel#subtitleLabel,QLabel#fileInfoLabel,QLabel#statusLabel{color:#93a4b8}QGroupBox{background:#252d39;border:1px solid #465365;border-radius:5px;margin-top:10px;padding:9px 6px 6px}QGroupBox::title{subcontrol-origin:margin;left:8px;padding:0 4px;color:#9fc9f5;font-weight:bold}QLineEdit,QComboBox{background:#151a21;border:1px solid #526175;border-radius:4px;padding:7px}QLineEdit:focus,QComboBox:focus{border:1px solid #68adf2}QPushButton{background:#354255;border:1px solid #596a80;border-radius:4px;padding:7px}QPushButton:hover{background:#41536a}QPushButton#runButton{background:#2369a8;color:white;font-weight:bold;border:1px solid #67b2f4}QPushButton#runButton:hover{background:#2f7fc5}QPushButton:disabled{color:#6f7a88;background:#29313c}QProgressBar{background:#11161d;border:1px solid #465365;border-radius:4px;text-align:center;min-height:20px}QProgressBar::chunk{background:#368fd4}QLabel#loadingLabel{color:#62d99b;font-weight:bold}QLabel#algorithmInfo{color:#6ddca5}QPlainTextEdit{background:#141a22;border:1px solid #465365;color:#b9c7d6;font-family:Menlo,monospace}QLabel#emptyPreview{color:#708196;border:1px dashed #526175}QLabel#imagePreview{background:#11161d}QSplitter::handle{background:#465365;width:2px})");
+ connect(ui->inputButton,&QPushButton::clicked,this,&MainWindow::chooseInput);connect(ui->outputButton,&QPushButton::clicked,this,&MainWindow::chooseOutput);connect(ui->inputEdit,&QLineEdit::textChanged,this,&MainWindow::updateInput);connect(ui->encryptMode,&QRadioButton::toggled,this,&MainWindow::updateMode);connect(ui->algorithmBox,&QComboBox::currentIndexChanged,this,&MainWindow::updateAlgorithm);connect(ui->runButton,&QPushButton::clicked,this,&MainWindow::run);connect(ui->openResultButton,&QPushButton::clicked,this,&MainWindow::openResult);connect(ui->openFolderButton,&QPushButton::clicked,this,&MainWindow::openFolder);connect(m_watcher,&QFutureWatcher<QVariantMap>::finished,this,&MainWindow::operationFinished);
+ connect(m_loadingTimer,&QTimer::timeout,this,[this]{const QStringList frames{"●  ○  ○","○  ●  ○","○  ○  ●","○  ●  ○"};ui->loadingLabel->setText(frames[m_loadingFrame++%frames.size()]+(m_decrypting?"   Đang giải mã và xác thực...":"   Đang mã hóa và đóng gói..."));});m_loadingTimer->setInterval(180);updateAlgorithm();updateMode();
 }
-MainWindow::~MainWindow() { delete ui; }
-
-void MainWindow::dragEnterEvent(QDragEnterEvent *event) {
-    if (event->mimeData()->hasUrls() && !event->mimeData()->urls().isEmpty()
-        && event->mimeData()->urls().first().isLocalFile()) event->acceptProposedAction();
-}
-void MainWindow::dropEvent(QDropEvent *event) {
-    const auto urls = event->mimeData()->urls();
-    if (!urls.isEmpty() && QFileInfo(urls.first().toLocalFile()).isFile()) {
-        ui->inputEdit->setText(urls.first().toLocalFile());
-        event->acceptProposedAction();
-    }
-}
-void MainWindow::chooseInput() {
-    const QString path = QFileDialog::getOpenFileName(this, "Chọn tệp cần xử lý");
-    if (!path.isEmpty()) ui->inputEdit->setText(path);
-}
-void MainWindow::chooseOutput() {
-    const QString path = QFileDialog::getSaveFileName(this, "Chọn tệp kết quả", ui->outputEdit->text());
-    if (!path.isEmpty()) ui->outputEdit->setText(path);
-}
-void MainWindow::updateSuggestion() {
-    const QFileInfo info(ui->inputEdit->text());
-    if (!info.exists()) { ui->fileInfoLabel->setText("Chưa chọn tệp — có thể kéo thả tệp vào cửa sổ"); return; }
-    ui->fileInfoLabel->setText(QString("%1  •  %2 MB").arg(info.fileName()).arg(info.size()/1048576.0, 0, 'f', 2));
-    ui->outputEdit->setText(ui->inputEdit->text().endsWith(".fcq", Qt::CaseInsensitive)
-        ? CryptoEngine::suggestedDecryptedPath(ui->inputEdit->text())
-        : CryptoEngine::suggestedEncryptedPath(ui->inputEdit->text()));
-}
-void MainWindow::encrypt() { run(false); }
-void MainWindow::decrypt() { run(true); }
-void MainWindow::openResult() {
-    if (QFileInfo::exists(ui->outputEdit->text())) QDesktopServices::openUrl(QUrl::fromLocalFile(ui->outputEdit->text()));
-}
-void MainWindow::openResultFolder() {
-    const QFileInfo info(ui->outputEdit->text());
-    if (info.dir().exists()) QDesktopServices::openUrl(QUrl::fromLocalFile(info.absolutePath()));
-}
-void MainWindow::setBusy(bool busy) {
-    ui->encryptButton->setDisabled(busy); ui->decryptButton->setDisabled(busy);
-    ui->inputEdit->setDisabled(busy); ui->outputEdit->setDisabled(busy);
-    ui->passwordEdit->setDisabled(busy); ui->algorithmBox->setDisabled(busy);
-}
-void MainWindow::run(bool decrypting) {
-    if (!QFileInfo::exists(ui->inputEdit->text())) { QMessageBox::warning(this,"Thiếu tệp","Vui lòng chọn hoặc kéo thả tệp nguồn vào cửa sổ."); return; }
-    if (ui->outputEdit->text().trimmed().isEmpty()) { QMessageBox::warning(this,"Thiếu đầu ra","Vui lòng chọn nơi lưu tệp kết quả."); return; }
-    if (ui->passwordEdit->text().size() < 8) { QMessageBox::warning(this,"Mật khẩu yếu","Mật khẩu cần có ít nhất 8 ký tự."); return; }
-    if (QFileInfo(ui->inputEdit->text()).absoluteFilePath()==QFileInfo(ui->outputEdit->text()).absoluteFilePath()) { QMessageBox::warning(this,"Đường dẫn không hợp lệ","Tệp nguồn và tệp kết quả phải khác nhau."); return; }
-    setBusy(true); ui->progressBar->setValue(0); ui->resultPreview->clear();
-    ui->openResultButton->setEnabled(false); ui->openFolderButton->setEnabled(false);
-    ui->statusLabel->setText(decrypting ? "Đang giải mã..." : "Đang mã hóa..."); QApplication::processEvents();
-    try {
-        auto progress=[this](qint64 done,qint64 total){ ui->progressBar->setValue(total>0?int(done*100/total):100); QApplication::processEvents(); };
-        QString algorithm;
-        if (decrypting) algorithm=CryptoEngine::algorithmName(CryptoEngine::decryptFile(ui->inputEdit->text(),ui->outputEdit->text(),ui->passwordEdit->text(),progress));
-        else {
-            auto selected=CryptoEngine::Algorithm(ui->algorithmBox->currentData().toInt());
-            CryptoEngine::encryptFile(ui->inputEdit->text(),ui->outputEdit->text(),ui->passwordEdit->text(),selected,progress);
-            algorithm=CryptoEngine::algorithmName(selected);
-        }
-        ui->progressBar->setValue(100); ui->statusLabel->setText("Hoàn tất");
-        QFile result(ui->outputEdit->text());
-        if (result.open(QIODevice::ReadOnly)) {
-            QByteArray preview=result.read(4096);
-            if (decrypting) {
-                QString text=QString::fromUtf8(preview);
-                if (!text.isEmpty() && text.count(QChar::ReplacementCharacter)<text.size()/20)
-                    ui->resultPreview->setPlainText(text+(result.size()>preview.size()?"\n\n… (chỉ hiển thị 4 KB đầu)":""));
-                else ui->resultPreview->setPlainText(QString("Đã giải mã tệp nhị phân thành công.\nKích thước: %1 byte\n\nHEX (4 KB đầu):\n%2").arg(result.size()).arg(QString::fromLatin1(preview.toHex(' '))));
-            } else ui->resultPreview->setPlainText(QString("Thuật toán: %1\nKích thước: %2 byte\nĐường dẫn: %3\n\nHEX (4 KB đầu):\n%4%5").arg(algorithm).arg(result.size()).arg(ui->outputEdit->text()).arg(QString::fromLatin1(preview.toHex(' '))).arg(result.size()>preview.size()?"\n\n… (chỉ hiển thị 4 KB đầu)":""));
-        }
-        ui->openResultButton->setEnabled(true); ui->openFolderButton->setEnabled(true);
-        QMessageBox::information(this,"Thành công",QString("%1 thành công bằng %2.\n\nKết quả: %3").arg(decrypting?"Giải mã":"Mã hóa",algorithm,ui->outputEdit->text()));
-    } catch (const std::exception &e) {
-        ui->progressBar->setValue(0); ui->statusLabel->setText("Có lỗi");
-        QMessageBox::critical(this,"Không thể xử lý",QString::fromStdString(e.what()));
-    }
-    setBusy(false);
-}
+MainWindow::~MainWindow(){if(m_watcher->isRunning())m_watcher->waitForFinished();delete ui;}
+void MainWindow::dragEnterEvent(QDragEnterEvent*e){if(e->mimeData()->hasUrls()&&!e->mimeData()->urls().isEmpty()&&e->mimeData()->urls().first().isLocalFile())e->acceptProposedAction();}
+void MainWindow::dropEvent(QDropEvent*e){auto u=e->mimeData()->urls();if(!u.isEmpty()&&QFileInfo(u.first().toLocalFile()).isFile()){setInputPath(u.first().toLocalFile());e->acceptProposedAction();}}
+void MainWindow::chooseInput(){QString p=QFileDialog::getOpenFileName(this,m_decrypting?"Chọn tệp .fcq":"Chọn văn bản, ảnh, video hoặc tệp bất kỳ");if(!p.isEmpty())setInputPath(p);}
+void MainWindow::chooseOutput(){QString p=QFileDialog::getSaveFileName(this,"Chọn tệp kết quả",ui->outputEdit->text());if(!p.isEmpty())ui->outputEdit->setText(p);}
+void MainWindow::setInputPath(const QString&p){ui->inputEdit->setText(p);}
+void MainWindow::updateInput(){QString p=ui->inputEdit->text();QFileInfo f(p);if(!f.exists()){ui->fileInfoLabel->setText("Chưa chọn tệp");ui->sourcePreview->clearPreview();return;}auto kind=FilePreview::classify(p);ui->fileInfoLabel->setText(QString("%1\n%2 • %3 MB").arg(f.fileName(),FilePreview::kindName(kind)).arg(f.size()/1048576.0,0,'f',2));ui->sourcePreview->showFile(p,kind==FilePreview::Kind::Encrypted);if(p.endsWith(".fcq",Qt::CaseInsensitive)){ui->decryptMode->setChecked(true);try{auto info=CryptoEngine::inspectFile(p);ui->algorithmBox->setCurrentIndex(ui->algorithmBox->findData(int(info.algorithm)));ui->detailText->setPlainText(QString("Định dạng FCQ v%1\nThuật toán: %2\nTệp gốc: %3\nLoại: %4\nXác thực toàn vẹn: %5").arg(info.version).arg(CryptoEngine::algorithmName(info.algorithm),info.originalName,info.mimeType,info.authenticated?"Có":"Không (định dạng cũ)"));}catch(const std::exception&e){ui->detailText->setPlainText(QString::fromStdString(e.what()));}}ui->outputEdit->setText(m_decrypting?CryptoEngine::suggestedDecryptedPath(p):CryptoEngine::suggestedEncryptedPath(p));}
+void MainWindow::updateMode(){m_decrypting=ui->decryptMode->isChecked();ui->algorithmBox->setEnabled(!m_decrypting);ui->runButton->setText(m_decrypting?"🔓 BẮT ĐẦU GIẢI MÃ":"🔒 BẮT ĐẦU MÃ HÓA");ui->sourcePreviewGroup->setTitle(m_decrypting?"TỆP MÃ HÓA • HEX":"TỆP GỐC • Xem trước");ui->resultPreviewGroup->setTitle(m_decrypting?"NỘI DUNG KHÔI PHỤC • Xem trực tiếp":"DỮ LIỆU MÃ HÓA • HEX");if(QFileInfo::exists(ui->inputEdit->text()))ui->outputEdit->setText(m_decrypting?CryptoEngine::suggestedDecryptedPath(ui->inputEdit->text()):CryptoEngine::suggestedEncryptedPath(ui->inputEdit->text()));updateAlgorithm();}
+QString MainWindow::algorithmExplanation()const{auto a=CryptoEngine::Algorithm(ui->algorithmBox->currentData().toInt());if(a==CryptoEngine::Algorithm::Aes256Gcm)return"AES-256-GCM kết hợp mã hóa và xác thực. Nếu dữ liệu truyền bị đổi dù chỉ 1 bit, giải mã sẽ bị từ chối.";if(a==CryptoEngine::Algorithm::ChaCha20Poly1305)return"ChaCha20-Poly1305 là mã dòng có xác thực, nhanh trên thiết bị không có tăng tốc AES và phát hiện dữ liệu bị sửa.";return"AES-256-CBC mã hóa theo khối; phiên bản này bổ sung HMAC-SHA256 kiểu encrypt-then-MAC để xác thực metadata và toàn bộ bản mã.";}
+void MainWindow::updateAlgorithm(){if(ui->algorithmBox->currentIndex()<0)return;auto a=CryptoEngine::Algorithm(ui->algorithmBox->currentData().toInt());ui->algorithmInfo->setText(a==CryptoEngine::Algorithm::Aes256Gcm?"✓ Có xác thực • Khuyến nghị":a==CryptoEngine::Algorithm::ChaCha20Poly1305?"✓ Có xác thực • Hiệu năng cao":"✓ CBC + HMAC-SHA256 • Tương thích");if(!m_decrypting)ui->detailText->setPlainText(algorithmExplanation()+"\n\nKhóa được dẫn xuất bằng PBKDF2-HMAC-SHA256 (200.000 vòng), salt và nonce/IV được sinh ngẫu nhiên cho mỗi lần mã hóa.");}
+void MainWindow::setBusy(bool b){ui->runButton->setDisabled(b);ui->inputButton->setDisabled(b);ui->outputButton->setDisabled(b);ui->encryptMode->setDisabled(b);ui->decryptMode->setDisabled(b);ui->passwordEdit->setDisabled(b);ui->algorithmBox->setDisabled(b||m_decrypting);ui->loadingLabel->setVisible(b);if(b)m_loadingTimer->start();else m_loadingTimer->stop();}
+void MainWindow::run(){QString in=ui->inputEdit->text(),out=ui->outputEdit->text(),pass=ui->passwordEdit->text();if(!QFileInfo::exists(in)){QMessageBox::warning(this,"Thiếu tệp","Hãy chọn tệp nguồn.");return;}if(pass.size()<8){QMessageBox::warning(this,"Mật khẩu yếu","Mật khẩu cần ít nhất 8 ký tự.");return;}if(out.isEmpty()||QFileInfo(in).absoluteFilePath()==QFileInfo(out).absoluteFilePath()){QMessageBox::warning(this,"Đầu ra không hợp lệ","Hãy chọn tệp kết quả khác tệp nguồn.");return;}auto alg=CryptoEngine::Algorithm(ui->algorithmBox->currentData().toInt());m_decrypting=ui->decryptMode->isChecked();setBusy(true);ui->progressBar->setValue(0);ui->progressBar->setFormat("%p% — Đang xử lý");ui->resultPreview->clearPreview("Đang xử lý dữ liệu...");ui->transmissionWidget->start(m_decrypting,CryptoEngine::algorithmName(alg));ui->statusLabel->setText(m_decrypting?"Đang xác thực và khôi phục nội dung...":"Đang biến đổi dữ liệu thành bản mã không thể đọc...");bool decrypting=m_decrypting;
+ auto future=QtConcurrent::run([this,in,out,pass,alg,decrypting]{QVariantMap r;try{auto progress=[this](qint64 d,qint64 t){int v=t?int(d*100/t):100;QMetaObject::invokeMethod(this,[this,v]{ui->progressBar->setValue(v);},Qt::QueuedConnection);};CryptoEngine::Algorithm used=alg;if(decrypting)used=CryptoEngine::decryptFile(in,out,pass,progress);else CryptoEngine::encryptFile(in,out,pass,alg,progress);r["ok"]=true;r["algorithm"]=CryptoEngine::algorithmName(used);r["output"]=out;}catch(const std::exception&e){r["ok"]=false;r["error"]=QString::fromStdString(e.what());}return r;});m_watcher->setFuture(future);}
+void MainWindow::operationFinished(){QVariantMap r=m_watcher->result();bool ok=r["ok"].toBool();setBusy(false);ui->transmissionWidget->finish(ok);if(!ok){ui->progressBar->setValue(0);ui->progressBar->setFormat("Lỗi xác thực");ui->statusLabel->setText("Thất bại: "+r["error"].toString());ui->resultPreview->clearPreview("Không tạo tệp kết quả\n"+r["error"].toString());return;}QString out=r["output"].toString(),alg=r["algorithm"].toString();ui->progressBar->setValue(100);ui->progressBar->setFormat("100% — Hoàn tất");ui->statusLabel->setText(QString("Hoàn tất • %1 • %2").arg(alg,QFileInfo(out).fileName()));ui->resultPreview->showFile(out,!m_decrypting);ui->openResultButton->setEnabled(true);ui->openFolderButton->setEnabled(true);QString before=m_decrypting?"Bản mã và thẻ xác thực":"Nội dung gốc";QString after=m_decrypting?"nội dung gốc đã được khôi phục và có thể xem trực tiếp":"bản mã có entropy cao, không còn nhận ra văn bản/ảnh/video";ui->detailText->setPlainText(QString("✓ %1\n\n%2 đã đi qua %3 và trở thành %4.\n\nMô phỏng kênh truyền: nếu kẻ thứ ba lấy được tệp .fcq, họ chỉ thấy dữ liệu HEX. Nếu sửa dữ liệu hoặc metadata, kiểm tra xác thực sẽ thất bại. Người nhận cần đúng mật khẩu để khôi phục tệp.").arg(m_decrypting?"Giải mã và xác thực thành công":"Mã hóa và đóng gói thành công",before,alg,after));}
+void MainWindow::openResult(){if(QFileInfo::exists(ui->outputEdit->text()))QDesktopServices::openUrl(QUrl::fromLocalFile(ui->outputEdit->text()));}
+void MainWindow::openFolder(){QFileInfo f(ui->outputEdit->text());if(f.dir().exists())QDesktopServices::openUrl(QUrl::fromLocalFile(f.absolutePath()));}

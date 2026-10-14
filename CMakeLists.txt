@@ -6,7 +6,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTOUIC ON)
 
-find_package(Qt6 REQUIRED COMPONENTS Widgets)
+find_package(Qt6 REQUIRED COMPONENTS Widgets Multimedia MultimediaWidgets Concurrent)
 find_package(OpenSSL REQUIRED)
 
 qt_add_executable(FileCryptoQt
@@ -16,9 +16,14 @@ qt_add_executable(FileCryptoQt
     mainwindow.ui
     cryptoengine.cpp
     cryptoengine.h
+    filepreview.cpp
+    filepreview.h
+    transmissionwidget.cpp
+    transmissionwidget.h
 )
 
-target_link_libraries(FileCryptoQt PRIVATE Qt6::Widgets OpenSSL::Crypto)
+target_link_libraries(FileCryptoQt PRIVATE Qt6::Widgets Qt6::Multimedia Qt6::MultimediaWidgets Qt6::Concurrent OpenSSL::Crypto)
+target_include_directories(FileCryptoQt PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
 
 set_target_properties(FileCryptoQt PROPERTIES
     MACOSX_BUNDLE TRUE
