@@ -88,10 +88,10 @@ MainWindow (UI)
 
 | Nhánh | Mục tiêu | Đóng gói |
 |---|---|---|
-| `master` | Mã nguồn tương thích macOS, Windows và Linux | CMake/CPack chung |
-| `macos` | Apple Silicon/Intel, app bundle | `macdeployqt`, DMG |
-| `windows` | Windows 10/11 x64 | `windeployqt`, ZIP |
-| `linux` | Linux x86_64 | AppDir, AppImage khi có `linuxdeploy` |
+| [`master`](https://github.com/soncris3012/FileCryptoQt/tree/master) | Mã nguồn tương thích macOS, Windows và Linux | CMake/CPack chung |
+| [`macos`](https://github.com/soncris3012/FileCryptoQt/tree/macos) | Apple Silicon/Intel, app bundle | `macdeployqt`, DMG |
+| [`windows`](https://github.com/soncris3012/FileCryptoQt/tree/windows) | Windows 10/11 x64 | `windeployqt`, ZIP |
+| [`linux`](https://github.com/soncris3012/FileCryptoQt/tree/linux) | Linux x86_64 | AppDir, AppImage khi có `linuxdeploy` |
 
 ## Build chung
 
