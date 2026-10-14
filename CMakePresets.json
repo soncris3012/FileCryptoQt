@@ -1,0 +1,1 @@
+{"version":6,"configurePresets":[{"name":"macos-release","displayName":"macOS Release","generator":"Unix Makefiles","binaryDir":"${sourceDir}/build-macos","cacheVariables":{"CMAKE_BUILD_TYPE":"Release","CMAKE_OSX_DEPLOYMENT_TARGET":"12.0"}}],"buildPresets":[{"name":"macos-release","configurePreset":"macos-release","jobs":4}]}
