@@ -1,0 +1,1 @@
+{"version":6,"configurePresets":[{"name":"linux-release","displayName":"Linux x86_64 Release","generator":"Ninja","binaryDir":"${sourceDir}/build-linux","cacheVariables":{"CMAKE_BUILD_TYPE":"Release","CMAKE_INSTALL_PREFIX":"${sourceDir}/AppDir/usr"}}],"buildPresets":[{"name":"linux-release","configurePreset":"linux-release","jobs":4}]}
