@@ -1,6 +1,11 @@
 # Build products
 /build/
 /cmake-build-*/
+/build-macos/
+/build-windows/
+/build-linux/
+/AppDir/
+/dist/
 
 # Qt Creator and IDE settings
 /.qtcreator/

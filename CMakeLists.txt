@@ -30,3 +30,14 @@ set_target_properties(FileCryptoQt PROPERTIES
     WIN32_EXECUTABLE TRUE
 )
 
+include(GNUInstallDirs)
+install(TARGETS FileCryptoQt
+    BUNDLE DESTINATION .
+    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+)
+
+set(CPACK_PACKAGE_NAME "FileCryptoQt")
+set(CPACK_PACKAGE_VENDOR "NCKH2627")
+set(CPACK_PACKAGE_VERSION ${PROJECT_VERSION})
+include(CPack)
+
