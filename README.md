@@ -86,12 +86,37 @@ MainWindow (UI)
 
 ## Nhánh theo hệ điều hành
 
+```mermaid
+graph TD
+    master --> macos
+    master --> linux
+    master --> windows
+    macos --> macos-intel
+    macos --> macos-silicon
+    linux --> linux-debian
+    linux --> linux-ubuntu
+    linux --> linux-mint
+    linux --> linux-kali
+    linux --> linux-popos
+    linux --> linux-zorin
+    linux --> linux-elementary
+```
+
 | Nhánh | Mục tiêu | Đóng gói |
 |---|---|---|
 | [`master`](https://github.com/soncris3012/FileCryptoQt/tree/master) | Mã nguồn tương thích macOS, Windows và Linux | CMake/CPack chung |
 | [`macos`](https://github.com/soncris3012/FileCryptoQt/tree/macos) | Apple Silicon/Intel, app bundle | `macdeployqt`, DMG |
 | [`windows`](https://github.com/soncris3012/FileCryptoQt/tree/windows) | Windows 10/11 x64 | `windeployqt`, ZIP |
 | [`linux`](https://github.com/soncris3012/FileCryptoQt/tree/linux) | Linux x86_64 | AppDir, AppImage khi có `linuxdeploy` |
+
+### Các nhánh thuộc họ macOS
+
+Hai nhánh này được phát triển trực tiếp từ `macos`, dùng cùng mã nguồn và định dạng FCQ2 nhưng ép kiến trúc CPU để Qt, OpenSSL và executable đồng nhất:
+
+| Nhánh | Phù hợp với | Kiến trúc | Gói đầu ra |
+|---|---|---|---|
+| [`macos-intel`](https://github.com/soncris3012/FileCryptoQt/tree/macos-intel) | Mac Intel; Apple Silicon chạy qua Rosetta 2 khi cần | `x86_64` | `FileCryptoQt-macOS-Intel.dmg` |
+| [`macos-silicon`](https://github.com/soncris3012/FileCryptoQt/tree/macos-silicon) | Mac dùng chip Apple M1, M2, M3, M4 hoặc mới hơn | `arm64` | `FileCryptoQt-macOS-Apple-Silicon.dmg` |
 
 ### Các nhánh thuộc họ Linux
 
