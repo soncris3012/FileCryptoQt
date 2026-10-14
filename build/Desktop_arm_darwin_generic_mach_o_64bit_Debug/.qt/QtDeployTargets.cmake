@@ -1,2 +1,0 @@
-set(__QT_DEPLOY_TARGET_FileCryptoQt_FILE /Users/soncris/NCKH2627/FileCryptoQt/build/Desktop_arm_darwin_generic_mach_o_64bit_Debug/FileCryptoQt.app/Contents/MacOS/FileCryptoQt)
-set(__QT_DEPLOY_TARGET_FileCryptoQt_TYPE EXECUTABLE)

@@ -1,5 +1,0 @@
-/Users/soncris/NCKH2627/FileCryptoQt/build/Desktop_arm_darwin_generic_mach_o_64bit_Debug/CMakeFiles/FileCryptoQt.dir
-/Users/soncris/NCKH2627/FileCryptoQt/build/Desktop_arm_darwin_generic_mach_o_64bit_Debug/CMakeFiles/edit_cache.dir
-/Users/soncris/NCKH2627/FileCryptoQt/build/Desktop_arm_darwin_generic_mach_o_64bit_Debug/CMakeFiles/rebuild_cache.dir
-/Users/soncris/NCKH2627/FileCryptoQt/build/Desktop_arm_darwin_generic_mach_o_64bit_Debug/CMakeFiles/FileCryptoQt_autogen_timestamp_deps.dir
-/Users/soncris/NCKH2627/FileCryptoQt/build/Desktop_arm_darwin_generic_mach_o_64bit_Debug/CMakeFiles/FileCryptoQt_autogen.dir

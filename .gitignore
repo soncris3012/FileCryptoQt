@@ -1,0 +1,16 @@
+# Build products
+/build/
+/cmake-build-*/
+
+# Qt Creator and IDE settings
+/.qtcreator/
+/.idea/
+*.user
+*.user.*
+
+# macOS
+.DS_Store
+
+# Encrypted/output files created while testing
+*.fcq
+*.decrypted
