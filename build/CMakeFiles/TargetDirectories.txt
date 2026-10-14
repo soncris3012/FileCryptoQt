@@ -1,0 +1,5 @@
+/Users/soncris/Documents/Codex/2026-10-14/lu/FileCryptoQt/build/CMakeFiles/FileCryptoQt.dir
+/Users/soncris/Documents/Codex/2026-10-14/lu/FileCryptoQt/build/CMakeFiles/edit_cache.dir
+/Users/soncris/Documents/Codex/2026-10-14/lu/FileCryptoQt/build/CMakeFiles/rebuild_cache.dir
+/Users/soncris/Documents/Codex/2026-10-14/lu/FileCryptoQt/build/CMakeFiles/FileCryptoQt_autogen_timestamp_deps.dir
+/Users/soncris/Documents/Codex/2026-10-14/lu/FileCryptoQt/build/CMakeFiles/FileCryptoQt_autogen.dir
