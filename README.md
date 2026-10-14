@@ -93,6 +93,12 @@ graph TD
     master --> windows
     macos --> macos-intel
     macos --> macos-silicon
+    windows --> winxp
+    windows --> winvista
+    windows --> win7
+    windows --> win8
+    windows --> win10
+    windows --> win11
     linux --> linux-debian
     linux --> linux-ubuntu
     linux --> linux-mint
@@ -117,6 +123,19 @@ Hai nhánh này được phát triển trực tiếp từ `macos`, dùng cùng m
 |---|---|---|---|
 | [`macos-intel`](https://github.com/soncris3012/FileCryptoQt/tree/macos-intel) | Mac Intel; Apple Silicon chạy qua Rosetta 2 khi cần | `x86_64` | `FileCryptoQt-macOS-Intel.dmg` |
 | [`macos-silicon`](https://github.com/soncris3012/FileCryptoQt/tree/macos-silicon) | Mac dùng chip Apple M1, M2, M3, M4 hoặc mới hơn | `arm64` | `FileCryptoQt-macOS-Apple-Silicon.dmg` |
+
+### Các nhánh thuộc họ Windows
+
+Các nhánh dưới đây được phát triển trực tiếp từ `windows`. Windows 10/11 dùng Qt 6 hiện tại; các hệ cũ cần cổng Qt/toolchain phù hợp và kiểm thử trên máy thật trước khi phát hành:
+
+| Nhánh | Phù hợp với | Hướng phát triển |
+|---|---|---|
+| [`win11`](https://github.com/soncris3012/FileCryptoQt/tree/win11) | Windows 11 x64 | Qt 6, Visual Studio 2022 |
+| [`win10`](https://github.com/soncris3012/FileCryptoQt/tree/win10) | Windows 10 x64 | Qt 6, Visual Studio 2022 |
+| [`win8`](https://github.com/soncris3012/FileCryptoQt/tree/win8) | Windows 8/8.1 x64 | Cổng Qt 5.15, kiểm thử Multimedia và DLL |
+| [`win7`](https://github.com/soncris3012/FileCryptoQt/tree/win7) | Windows 7 SP1 x64 | Cổng Qt 5.15 và Visual Studio 2019 |
+| [`winvista`](https://github.com/soncris3012/FileCryptoQt/tree/winvista) | Windows Vista | Toolchain legacy và kiểm thử riêng |
+| [`winxp`](https://github.com/soncris3012/FileCryptoQt/tree/winxp) | Windows XP | Qt/toolchain legacy dành cho XP |
 
 ### Các nhánh thuộc họ Linux
 
