@@ -43,3 +43,11 @@ Toàn bộ tệp được mã hóa/giải mã theo từng khối 1 MB. Giới h�
 - `mainwindow`: điều phối giao diện, tác vụ nền và trạng thái tiến trình.
 
 Không xóa tệp gốc trước khi đã thử giải mã và kiểm tra kết quả.
+
+### Xử lý cả thư mục
+
+Nhấn **Thư mục** hoặc kéo một thư mục từ Finder vào cửa sổ. Ứng dụng duyệt đệ quy tất cả thư mục con và giữ nguyên cấu trúc:
+
+- Mã hóa: mỗi tệp nhận thêm đuôi `.fcq` trong thư mục kết quả.
+- Giải mã: chỉ các tệp `.fcq` được xử lý và được khôi phục đúng tên gốc.
+- Mỗi tệp có salt và nonce/IV ngẫu nhiên riêng; tiến trình hiển thị cho toàn bộ lô.
