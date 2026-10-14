@@ -93,6 +93,20 @@ MainWindow (UI)
 | [`windows`](https://github.com/soncris3012/FileCryptoQt/tree/windows) | Windows 10/11 x64 | `windeployqt`, ZIP |
 | [`linux`](https://github.com/soncris3012/FileCryptoQt/tree/linux) | Linux x86_64 | AppDir, AppImage khi có `linuxdeploy` |
 
+### Các nhánh thuộc họ Linux
+
+Tất cả các nhánh dưới đây được phát triển từ nhánh `linux`, giữ nguyên mã nguồn và định dạng FCQ2 nhưng có hướng dẫn cùng script cài phụ thuộc riêng:
+
+| Nhánh | Phù hợp với |
+|---|---|
+| [`linux-debian`](https://github.com/soncris3012/FileCryptoQt/tree/linux-debian) | Debian Stable, workstation hoặc máy chủ có desktop |
+| [`linux-ubuntu`](https://github.com/soncris3012/FileCryptoQt/tree/linux-ubuntu) | Ubuntu Desktop/LTS, thân thiện với người mới |
+| [`linux-mint`](https://github.com/soncris3012/FileCryptoQt/tree/linux-mint) | Linux Mint Cinnamon/MATE/Xfce |
+| [`linux-kali`](https://github.com/soncris3012/FileCryptoQt/tree/linux-kali) | Kali Rolling và phòng lab bảo mật |
+| [`linux-popos`](https://github.com/soncris3012/FileCryptoQt/tree/linux-popos) | Pop!_OS, workstation đồ họa/GPU |
+| [`linux-zorin`](https://github.com/soncris3012/FileCryptoQt/tree/linux-zorin) | Zorin OS, desktop và phân phối AppImage |
+| [`linux-elementary`](https://github.com/soncris3012/FileCryptoQt/tree/linux-elementary) | elementary OS và desktop Pantheon |
+
 ## Build chung
 
 Yêu cầu CMake 3.21+, trình biên dịch C++17, Qt 6 với Widgets/Multimedia/Concurrent và OpenSSL.
