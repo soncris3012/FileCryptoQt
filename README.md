@@ -112,7 +112,7 @@ graph TD
 
 | Nhánh | Mục tiêu | Đóng gói / Chạy |
 |---|---|---|
-| [`web`](https://github.com/soncris3012/FileCryptoQt/tree/web) | Web App 100% Client-Side, Web Crypto API | Static PWA / HTML5 / `./scripts/serve.sh` |
+| [`web`](https://github.com/soncris3012/FileCryptoQt/tree/web) | Web App 100% Client-Side, Web Crypto API | **[https://filecrypto-web.vercel.app](https://filecrypto-web.vercel.app)** |
 | [`ios`](https://github.com/soncris3012/FileCryptoQt/tree/ios) | iOS Native, Swift & CryptoKit | Xcode, IPA, TestFlight |
 | [`master`](https://github.com/soncris3012/FileCryptoQt/tree/master) | Mã nguồn tương thích macOS, Windows và Linux | CMake/CPack chung |
 | [`macos`](https://github.com/soncris3012/FileCryptoQt/tree/macos) | Apple Silicon/Intel, app bundle | `macdeployqt`, DMG |

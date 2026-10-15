@@ -2,6 +2,9 @@
 
 Nhánh này cung cấp phiên bản web 100% chạy client-side trong trình duyệt của FileCryptoQt. Toàn bộ quá trình mã hóa, dẫn xuất khóa PBKDF2 và xác thực tính toàn vẹn diễn ra trực tiếp trên thiết bị của người dùng thông qua **Web Crypto API** (`crypto.subtle`) và thuật toán **RFC 8439 pure JavaScript**, đảm bảo zero-server leak và quyền riêng tư tuyệt đối.
 
+- 🌐 **Đường dẫn truy cập trực tuyến (Production Live)**: **[https://filecrypto-web.vercel.app](https://filecrypto-web.vercel.app)**
+
+
 ## Tính năng
 
 - **Định dạng FCQ2 & FCQ1 tương thích 100%**:
