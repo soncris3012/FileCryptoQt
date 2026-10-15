@@ -91,6 +91,8 @@ graph TD
     master --> macos
     master --> linux
     master --> windows
+    master --> web
+    master --> ios
     macos --> macos-intel
     macos --> macos-silicon
     windows --> winxp
@@ -108,12 +110,20 @@ graph TD
     linux --> linux-elementary
 ```
 
-| Nhánh | Mục tiêu | Đóng gói |
+| Nhánh | Mục tiêu | Đóng gói / Chạy |
 |---|---|---|
 | [`master`](https://github.com/soncris3012/FileCryptoQt/tree/master) | Mã nguồn tương thích macOS, Windows và Linux | CMake/CPack chung |
+| [`web`](https://github.com/soncris3012/FileCryptoQt/tree/web) | Ứng dụng Web 100% Client-Side, Web Crypto API | Static PWA / HTML5 / `./scripts/serve.sh` |
+| [`ios`](https://github.com/soncris3012/FileCryptoQt/tree/ios) | Ứng dụng iOS native, Swift 6 & Apple CryptoKit | Xcode, IPA, TestFlight, `./scripts/build_ios.sh` |
 | [`macos`](https://github.com/soncris3012/FileCryptoQt/tree/macos) | Apple Silicon/Intel, app bundle | `macdeployqt`, DMG |
 | [`windows`](https://github.com/soncris3012/FileCryptoQt/tree/windows) | Windows 10/11 x64 | `windeployqt`, ZIP |
 | [`linux`](https://github.com/soncris3012/FileCryptoQt/tree/linux) | Linux x86_64 | AppDir, AppImage khi có `linuxdeploy` |
+
+### Nhánh Web & iOS
+
+- [`web`](https://github.com/soncris3012/FileCryptoQt/tree/web): Ứng dụng web trực tuyến chạy hoàn toàn trong trình duyệt bằng Web Crypto API và chuẩn RFC 8439 pure JavaScript. Không tải tệp lên bất kỳ máy chủ nào. Xem trước đa phương tiện, giả lập đường truyền và bảng HEX.
+- [`ios`](https://github.com/soncris3012/FileCryptoQt/tree/ios): Ứng dụng iOS & iPadOS native xây dựng bằng SwiftUI và Apple CryptoKit phần cứng, tích hợp sâu ứng dụng Tệp (Files), AirDrop và Share Sheet.
+
 
 ### Các nhánh thuộc họ macOS
 
