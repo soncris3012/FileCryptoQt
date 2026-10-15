@@ -91,6 +91,8 @@ graph TD
     master --> macos
     master --> linux
     master --> windows
+    master --> web
+    master --> ios
     macos --> macos-intel
     macos --> macos-silicon
     windows --> winxp
@@ -108,12 +110,25 @@ graph TD
     linux --> linux-elementary
 ```
 
-| Nhánh | Mục tiêu | Đóng gói |
+| Nhánh | Mục tiêu | Đóng gói / Chạy |
 |---|---|---|
+| [`ios`](https://github.com/soncris3012/FileCryptoQt/tree/ios) | iOS Native, Swift 6 & Apple CryptoKit | Xcode, IPA, TestFlight, `./scripts/build_ios.sh` |
+| [`web`](https://github.com/soncris3012/FileCryptoQt/tree/web) | Web App 100% Client-Side, Web Crypto API | Static PWA / HTML5 / `./scripts/serve.sh` |
 | [`master`](https://github.com/soncris3012/FileCryptoQt/tree/master) | Mã nguồn tương thích macOS, Windows và Linux | CMake/CPack chung |
 | [`macos`](https://github.com/soncris3012/FileCryptoQt/tree/macos) | Apple Silicon/Intel, app bundle | `macdeployqt`, DMG |
 | [`windows`](https://github.com/soncris3012/FileCryptoQt/tree/windows) | Windows 10/11 x64 | `windeployqt`, ZIP |
 | [`linux`](https://github.com/soncris3012/FileCryptoQt/tree/linux) | Linux x86_64 | AppDir, AppImage khi có `linuxdeploy` |
+
+## Khởi chạy bản iOS (FileCrypto iOS)
+
+Mở dự án `ios/Package.swift` bằng Xcode hoặc chạy bộ kiểm thử tự động:
+
+```bash
+./scripts/build_ios.sh
+```
+
+Bản iOS sử dụng Apple CryptoKit phần cứng và SwiftUI native, hỗ trợ chia sẻ AirDrop và lưu trực tiếp vào ứng dụng Files.
+
 
 ### Các nhánh thuộc họ macOS
 
