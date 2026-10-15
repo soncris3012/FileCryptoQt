@@ -19,3 +19,4 @@
 # Encrypted/output files created while testing
 *.fcq
 *.decrypted
+.vercel
