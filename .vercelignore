@@ -1,0 +1,12 @@
+build/
+build-*/
+cmake-build-*/
+.git/
+.idea/
+.qtcreator/
+ios/
+*.cpp
+*.h
+*.ui
+CMakeLists.txt
+CMakePresets.json

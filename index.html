@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FileCrypto Web — CryptoLab Trực tuyến</title>
+    <meta name="description" content="Ứng dụng mã hóa và giải mã tệp tin an toàn 100% client-side trong trình duyệt. Tương thích định dạng FCQ2/FCQ1 với AES-256-GCM, ChaCha20-Poly1305 và AES-256-CBC.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header class="app-header">
+            <nav class="nav-bar">
+                <div class="brand-wrapper">
+                    <div class="brand-icon">🛡️</div>
+                    <div class="brand-text">
+                        <h1>FileCrypto Web <span class="badge-client">100% Client-Side</span></h1>
+                    </div>
+                </div>
+                <div class="platform-badges">
+                    <span class="platform-pill active" title="Bản Web đang chạy">🌐 Web Client</span>
+                    <span class="platform-pill" title="Nhánh macOS">🍎 macOS</span>
+                    <span class="platform-pill" title="Nhánh iOS">📱 iOS (Swift)</span>
+                    <span class="platform-pill" title="Nhánh Windows">🪟 Windows</span>
+                    <span class="platform-pill" title="Nhánh Linux">🐧 Linux</span>
+                </div>
+            </nav>
+        </header>
+
+        <!-- Tabs Navigation -->
+        <div class="tabs-nav">
+            <button class="tab-btn active" data-tab="encrypt">🔒 Mã hóa tệp</button>
+            <button class="tab-btn" data-tab="decrypt">🔓 Giải mã tệp</button>
+            <button class="tab-btn" data-tab="inspect">🔍 Soi Header FCQ</button>
+            <button class="tab-btn" data-tab="docs">📖 Thuật toán & Kiểm thử</button>
+        </div>
+
+        <!-- Main Content Area -->
+        <div class="tab-content">
+            <!-- Mode 1, 2, 3: Operational View -->
+            <div id="operationWrapper">
+                <div class="main-grid">
+                    <!-- Left Column: Controls & Dropzone -->
+                    <div class="glass-card">
+                        <h2 class="card-title">📁 Chọn tệp tin</h2>
+
+                        <!-- Dropzone -->
+                        <div class="dropzone" id="dropzone">
+                            <div class="dropzone-icon">📥</div>
+                            <div class="dropzone-title">Kéo thả tệp hoặc thư mục vào đây để mã hóa</div>
+                            <div class="dropzone-subtitle">Hỗ trợ mọi định dạng: Văn bản, Ảnh, Video, File nhị phân lớn</div>
+                            <div class="dropzone-actions">
+                                <label class="btn btn-outline" for="fileInput">
+                                    📄 Chọn tệp
+                                    <input type="file" id="fileInput" style="display: none;">
+                                </label>
+                                <label class="btn btn-outline" for="folderInput">
+                                    📁 Chọn thư mục
+                                    <input type="file" id="folderInput" webkitdirectory directory style="display: none;">
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- Selected File Meta Card -->
+                        <div class="file-info-card" id="fileInfoCard">
+                            <div class="file-info-meta">
+                                <div class="file-icon">📦</div>
+                                <div class="file-details">
+                                    <h4 id="selectedFileName">filename.ext</h4>
+                                    <span id="selectedFileSize">0 KB</span> • <span id="selectedFileType">text/plain</span>
+                                </div>
+                            </div>
+                            <button class="btn-icon-danger" id="removeFileBtn" title="Hủy chọn tệp">✕</button>
+                        </div>
+
+                        <!-- Algorithm Selector (Encrypt only) -->
+                        <div class="form-group" id="algoGroup">
+                            <label class="form-label" for="algorithmSelect">Thuật toán mã hóa:</label>
+                            <select id="algorithmSelect" class="form-select">
+                                <option value="2" selected>AES-256-GCM (Khuyến nghị — AEAD, Tăng tốc phần cứng)</option>
+                                <option value="3">ChaCha20-Poly1305 (AEAD chuẩn RFC 8439, tối ưu CPU di động)</option>
+                                <option value="1">AES-256-CBC + HMAC-SHA256 (Mô hình Encrypt-then-MAC)</option>
+                            </select>
+                        </div>
+
+                        <!-- Password Input -->
+                        <div class="form-group" id="passGroup">
+                            <label class="form-label" for="passwordInput">Mật khẩu bảo vệ / mở khóa:</label>
+                            <div class="input-password-wrapper">
+                                <input type="password" id="passwordInput" class="form-input" placeholder="Nhập mật khẩu an toàn...">
+                                <div class="pass-actions">
+                                    <button type="button" class="btn-pass-action" id="togglePassBtn" title="Hiện/Ẩn mật khẩu">👁️</button>
+                                    <button type="button" class="btn-pass-action" id="generatePassBtn" title="Tạo mật khẩu ngẫu nhiên">🎲</button>
+                                </div>
+                            </div>
+                            <div class="pass-strength-container">
+                                <div class="pass-strength-track">
+                                    <div class="pass-strength-bar" id="passStrengthBar"></div>
+                                </div>
+                                <span class="pass-strength-label" id="passStrengthLabel"></span>
+                            </div>
+                        </div>
+
+                        <!-- Action Button -->
+                        <button id="actionBtn" class="btn btn-primary">🔒 Bắt đầu mã hóa tệp</button>
+
+                        <!-- Progress Bar -->
+                        <div class="progress-section" id="progressSection">
+                            <div class="progress-header">
+                                <span id="progressStatus">Đang xử lý...</span>
+                                <span id="progressPercent">0%</span>
+                            </div>
+                            <div class="progress-track">
+                                <div class="progress-fill" id="progressBar"></div>
+                            </div>
+                        </div>
+
+                        <!-- Result Section -->
+                        <div class="result-section" id="resultSection">
+                            <div id="resultDetails"></div>
+                            <button id="downloadBtn" class="btn btn-success">💾 Tải tệp kết quả xuống</button>
+                        </div>
+
+                        <!-- Inspect Result Card -->
+                        <div class="inspect-card" id="inspectResultCard" style="display: none; margin-top: 16px;">
+                            <h3 class="card-title">🔬 Phân tích chi tiết Header FCQ</h3>
+                            <div id="inspectContent"></div>
+                        </div>
+                    </div>
+
+                    <!-- Right Column: Live Preview & Inspection -->
+                    <div class="glass-card">
+                        <h2 class="card-title">👁️ Xem trước nội dung (File Preview)</h2>
+                        <div class="preview-container" id="previewContainer">
+                            <div class="preview-empty">Chọn hoặc kéo thả tệp để xem trước văn bản, hình ảnh, media hoặc bảng HEX</div>
+                        </div>
+                    </div>
+
+                    <!-- Full Width: Transmission Simulator -->
+                    <div class="glass-card transmission-card">
+                        <h2 class="card-title">📡 Mô phỏng luồng truyền tải dữ liệu (Transmission Simulator)</h2>
+                        <div class="canvas-wrapper">
+                            <canvas id="transmissionCanvas"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tab Pane: Documentation & Self-Test -->
+            <div id="docsPane" class="tab-pane" style="display: none;">
+                <div class="glass-card" style="margin-bottom: 24px;">
+                    <h2 class="card-title">⚡ Bộ tự kiểm thử trực tiếp trên trình duyệt (Self-Test Suite)</h2>
+                    <p style="color: var(--text-secondary); font-size: 13px; margin-bottom: 16px;">
+                        Chạy kiểm tra tự động toàn bộ 3 thuật toán (AES-256-GCM, ChaCha20-Poly1305, AES-256-CBC+HMAC) bằng Web Crypto API và Pure JS RFC 8439, bao gồm kiểm tra bẫy can thiệp dữ liệu (Tamper Resistance).
+                    </p>
+                    <button id="runSelfTestBtn" class="btn btn-info" style="width: auto;">🚀 Bắt đầu chạy Self-Test</button>
+                    <div id="selfTestResults" style="margin-top: 16px;"></div>
+                </div>
+
+                <div class="glass-card">
+                    <h2 class="card-title">📚 Cấu trúc định dạng tệp FCQ2</h2>
+                    <div class="code-container" style="background: rgba(0,0,0,0.4); padding: 16px; border-radius: 8px;">
+<pre class="code-content"><code>Định dạng tệp FCQ2 (FileCryptoQt v2)
+├── Magic: "FCQ2" (4 bytes)
+├── Mã thuật toán: 1=AES-CBC+HMAC, 2=AES-GCM, 3=ChaCha20-Poly1305 (1 byte)
+├── Salt dẫn xuất: ngẫu nhiên 16 bytes (PBKDF2-HMAC-SHA256 200.000 vòng)
+├── Độ dài IV/Nonce: 12 bytes (GCM/ChaCha) hoặc 16 bytes (CBC) (1 byte)
+├── IV/Nonce ngẫu nhiên (12 hoặc 16 bytes)
+├── Độ dài tên tệp gốc: Big-Endian uint16 (2 bytes)
+├── Tên tệp gốc: UTF-8 encoded string
+├── Độ dài loại MIME gốc: Big-Endian uint16 (2 bytes)
+├── Loại MIME gốc: UTF-8 encoded string
+├── Toàn bộ bản mã (Ciphertext)
+└── Thẻ xác thực: 16 bytes AEAD Tag (AES-GCM / ChaCha20) hoặc 32 bytes HMAC-SHA256 (CBC)</code></pre>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <footer class="app-footer">
+            <p>FileCrypto Web — CryptoLab (NCKH 2026–2027) | Bảo mật 100% phía người dùng (Zero-Knowledge, Zero-Server)</p>
+            <p style="margin-top: 4px;">Tương thích hoàn toàn với các bản <a href="https://github.com/soncris3012/FileCryptoQt/tree/macos">macOS</a>, <a href="https://github.com/soncris3012/FileCryptoQt/tree/ios">iOS</a>, <a href="https://github.com/soncris3012/FileCryptoQt/tree/windows">Windows</a> và <a href="https://github.com/soncris3012/FileCryptoQt/tree/linux">Linux</a>.</p>
+        </footer>
+    </div>
+
+    <!-- Scripts -->
+    <script src="js/crypto-engine.js"></script>
+    <script src="js/preview.js"></script>
+    <script src="js/transmission.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>

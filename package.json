@@ -1,0 +1,22 @@
+{
+  "name": "filecrypto-web",
+  "version": "2.0.0",
+  "description": "FileCrypto Web (CryptoLab) — Trình mã hóa và giải mã tệp an toàn 100% client-side tương thích FCQ2 & FCQ1",
+  "main": "js/app.js",
+  "scripts": {
+    "build": "echo 'Build complete'",
+    "start": "node -e \"const http = require('http'), fs = require('fs'), path = require('path'); const mime = { '.html': 'text/html', '.css': 'text/css', '.js': 'application/javascript', '.json': 'application/json', '.png': 'image/png', '.svg': 'image/svg+xml' }; http.createServer((req, res) => { let p = path.join(__dirname, req.url === '/' ? 'index.html' : req.url.split('?')[0]); if (!fs.existsSync(p)) { res.writeHead(404); return res.end('Not Found'); } res.writeHead(200, { 'Content-Type': mime[path.extname(p)] || 'application/octet-stream' }); fs.createReadStream(p).pipe(res); }).listen(3000, () => console.log('CryptoLab Web đang chạy tại http://localhost:3000'));\"",
+    "dev": "npm start",
+    "test": "node test/test-engine.js"
+  },
+  "keywords": [
+    "cryptography",
+    "aes-gcm",
+    "chacha20-poly1305",
+    "aes-cbc",
+    "file-encryption",
+    "fcq2"
+  ],
+  "author": "NCKH2627",
+  "license": "MIT"
+}
