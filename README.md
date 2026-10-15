@@ -91,6 +91,8 @@ graph TD
     master --> macos
     master --> linux
     master --> windows
+    master --> web
+    master --> ios
     macos --> macos-intel
     macos --> macos-silicon
     windows --> winxp
@@ -108,12 +110,33 @@ graph TD
     linux --> linux-elementary
 ```
 
-| Nhánh | Mục tiêu | Đóng gói |
+| Nhánh | Mục tiêu | Đóng gói / Chạy |
 |---|---|---|
+| [`web`](https://github.com/soncris3012/FileCryptoQt/tree/web) | Web App 100% Client-Side, Web Crypto API | Static PWA / HTML5 / `./scripts/serve.sh` |
+| [`ios`](https://github.com/soncris3012/FileCryptoQt/tree/ios) | iOS Native, Swift & CryptoKit | Xcode, IPA, TestFlight |
 | [`master`](https://github.com/soncris3012/FileCryptoQt/tree/master) | Mã nguồn tương thích macOS, Windows và Linux | CMake/CPack chung |
 | [`macos`](https://github.com/soncris3012/FileCryptoQt/tree/macos) | Apple Silicon/Intel, app bundle | `macdeployqt`, DMG |
 | [`windows`](https://github.com/soncris3012/FileCryptoQt/tree/windows) | Windows 10/11 x64 | `windeployqt`, ZIP |
 | [`linux`](https://github.com/soncris3012/FileCryptoQt/tree/linux) | Linux x86_64 | AppDir, AppImage khi có `linuxdeploy` |
+
+## Khởi chạy bản Web (CryptoLab Web)
+
+Không cần cài đặt phức tạp, bạn có thể chạy ngay với script hoặc Node.js:
+
+```bash
+# Khởi chạy máy chủ tĩnh tại cổng 3000
+./scripts/serve.sh 3000
+
+# Hoặc dùng npm
+npm start
+
+# Chạy bộ kiểm thử tự động
+npm test
+```
+Mở trình duyệt: `http://localhost:3000`
+
+Bản Web chạy 100% phía người dùng (Client-Side), không gửi bất kỳ dữ liệu nào lên máy chủ, đảm bảo an toàn tuyệt đối.
+
 
 ### Các nhánh thuộc họ macOS
 
