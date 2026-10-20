@@ -167,11 +167,11 @@
                   </property>
                   <item>
                    <widget class="QPlainTextEdit" name="textInputEdit">
-                    <property name="placeholderText">
-                     <string>Nhập chuỗi văn bản cần mã hóa (hoặc dán bản mã Hex/Base64 để giải mã)...</string>
-                    </property>
                     <property name="plainText">
                      <string>Bài thực hành Mật mã học OpenSSL: AES-256-CBC, Base64 (-a) và CSR.</string>
+                    </property>
+                    <property name="placeholderText">
+                     <string>Nhập chuỗi văn bản cần mã hóa (hoặc dán bản mã Hex/Base64 để giải mã)...</string>
                     </property>
                    </widget>
                   </item>
@@ -276,14 +276,14 @@
               </item>
               <item row="1" column="1">
                <widget class="QLineEdit" name="passwordEdit">
+                <property name="text">
+                 <string/>
+                </property>
                 <property name="echoMode">
                  <enum>QLineEdit::EchoMode::Password</enum>
                 </property>
                 <property name="placeholderText">
                  <string>Nhập mật khẩu an toàn...</string>
-                </property>
-                <property name="text">
-                 <string>MatKhauLab2026</string>
                 </property>
                </widget>
               </item>
@@ -335,14 +335,14 @@
            </item>
            <item>
             <widget class="QLabel" name="loadingLabel">
+             <property name="visible">
+              <bool>false</bool>
+             </property>
              <property name="text">
               <string>●  ○  ○   Đang chuẩn bị...</string>
              </property>
              <property name="alignment">
               <set>Qt::AlignmentFlag::AlignCenter</set>
-             </property>
-             <property name="visible">
-              <bool>false</bool>
              </property>
             </widget>
            </item>
@@ -687,11 +687,11 @@
               </item>
               <item row="0" column="1">
                <widget class="QLineEdit" name="csrCnEdit">
-                <property name="placeholderText">
-                 <string>example.com hoặc sinhvien.edu.vn</string>
-                </property>
                 <property name="text">
                  <string>cryptolab.local</string>
+                </property>
+                <property name="placeholderText">
+                 <string>example.com hoặc sinhvien.edu.vn</string>
                 </property>
                </widget>
               </item>
@@ -704,11 +704,11 @@
               </item>
               <item row="1" column="1">
                <widget class="QLineEdit" name="csrOEdit">
-                <property name="placeholderText">
-                 <string>Tên công ty hoặc Trường ĐH</string>
-                </property>
                 <property name="text">
                  <string>CryptoLab Security Academy</string>
+                </property>
+                <property name="placeholderText">
+                 <string>Tên công ty hoặc Trường ĐH</string>
                 </property>
                </widget>
               </item>
@@ -721,11 +721,11 @@
               </item>
               <item row="2" column="1">
                <widget class="QLineEdit" name="csrOuEdit">
-                <property name="placeholderText">
-                 <string>Khoa CNTT / An Toàn Thông Tin</string>
-                </property>
                 <property name="text">
                  <string>Cyber Security Lab</string>
+                </property>
+                <property name="placeholderText">
+                 <string>Khoa CNTT / An Toàn Thông Tin</string>
                 </property>
                </widget>
               </item>
@@ -738,14 +738,14 @@
               </item>
               <item row="3" column="1">
                <widget class="QLineEdit" name="csrCEdit">
+                <property name="text">
+                 <string>VN</string>
+                </property>
                 <property name="maxLength">
                  <number>2</number>
                 </property>
                 <property name="placeholderText">
                  <string>Mã 2 ký tự (VN, US, JP...)</string>
-                </property>
-                <property name="text">
-                 <string>VN</string>
                 </property>
                </widget>
               </item>
@@ -758,11 +758,11 @@
               </item>
               <item row="4" column="1">
                <widget class="QLineEdit" name="csrStEdit">
-                <property name="placeholderText">
-                 <string>Tỉnh / Thành phố</string>
-                </property>
                 <property name="text">
                  <string>Ha Noi</string>
+                </property>
+                <property name="placeholderText">
+                 <string>Tỉnh / Thành phố</string>
                 </property>
                </widget>
               </item>
@@ -775,11 +775,11 @@
               </item>
               <item row="5" column="1">
                <widget class="QLineEdit" name="csrLEdit">
-                <property name="placeholderText">
-                 <string>Quận / Huyện</string>
-                </property>
                 <property name="text">
                  <string>Cau Giay</string>
+                </property>
+                <property name="placeholderText">
+                 <string>Quận / Huyện</string>
                 </property>
                </widget>
               </item>
@@ -792,11 +792,11 @@
               </item>
               <item row="6" column="1">
                <widget class="QLineEdit" name="csrEmailEdit">
-                <property name="placeholderText">
-                 <string>admin@cryptolab.local</string>
-                </property>
                 <property name="text">
                  <string>security@cryptolab.local</string>
+                </property>
+                <property name="placeholderText">
+                 <string>admin@cryptolab.local</string>
                 </property>
                </widget>
               </item>
