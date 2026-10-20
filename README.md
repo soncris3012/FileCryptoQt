@@ -4,17 +4,25 @@
 
 ![Qt 6](https://img.shields.io/badge/Qt-6.4%2B-41CD52) ![C++17](https://img.shields.io/badge/C%2B%2B-17-00599C) ![OpenSSL](https://img.shields.io/badge/OpenSSL-3%2B-721412) ![Platforms](https://img.shields.io/badge/platform-macOS%20%7C%20Windows%20%7C%20Linux-4c8eda)
 
-## Chức năng
+## Chức năng nổi bật
 
-- Mã hóa/giải mã một tệp hoặc toàn bộ thư mục theo kiểu đệ quy.
-- Kéo thả tệp và thư mục trực tiếp vào cửa sổ.
-- Ba lựa chọn: AES-256-GCM, ChaCha20-Poly1305 và AES-256-CBC + HMAC-SHA256.
-- Đọc/ghi streaming theo khối 1 MB, phù hợp với video lớn.
-- Xem văn bản, ảnh và video sau giải mã; tệp nhị phân và bản mã hiển thị HEX.
-- Khôi phục tên, phần mở rộng và MIME gốc từ định dạng `FCQ2`.
-- Phát hiện sai mật khẩu hoặc dữ liệu bị sửa trước khi chấp nhận kết quả.
-- Hiệu ứng tiến trình, nhật ký và mô phỏng đường truyền.
-- Tương thích tệp `FCQ1` từ phiên bản đầu.
+Ứng dụng được thiết kế thành **2 Tab chính** phục vụ trực quan hóa cho bài học và nghiên cứu An toàn thông tin:
+
+### Tab 1: 🔐 Mã hóa & Giải mã (Tập tin & Văn bản thuần)
+- **Hỗ trợ 2 chế độ đầu vào**: Nhập chuỗi văn bản thuần (Plaintext) trực tiếp hoặc chọn Tệp tin / Thư mục đệ quy (kéo thả linh hoạt).
+- **Trực quan hóa kép (Dual Output)**: Hiển thị song song **Mã HEX (dữ liệu nhị phân sau mã hóa)** và **Chuỗi Base64 (cờ `-a`)**, giúp người học phân biệt rõ ràng giữa bản mã nhị phân và dạng bọc ASCII để truyền tải qua mạng.
+- **Tương thích 100% với OpenSSL CLI**: Dữ liệu mã hóa với chuẩn `Salted__` có thể giải mã trực tiếp bằng lệnh `openssl enc -d -aes-256-cbc -pbkdf2 -a` trên Terminal và ngược lại.
+- **Bộ sinh lệnh Terminal thời gian thực**: Tự động ánh xạ cấu hình giao diện thành câu lệnh OpenSSL tương đương (`openssl enc -aes-256-cbc -salt -pbkdf2 -a`).
+- **Thuật toán nâng cao**: AES-256-GCM (AEAD), ChaCha20-Poly1305, AES-256-CBC + HMAC-SHA256.
+- Đọc/ghi streaming theo khối 1 MB, xem trước tệp đa phương tiện sau khi giải mã.
+
+### Tab 2: 📜 Tạo Yêu cầu Chứng chỉ CSR & Cặp Khóa (PKI / X.509)
+- **Sinh cặp khóa an toàn**: Hỗ trợ RSA (2048-bit, 4096-bit) và đường cong Elliptic ECC (NIST P-256, NIST P-384) qua OpenSSL EVP API.
+- **Thiết lập Subject DN đầy đủ**: Common Name (CN), Organization (O), Organizational Unit (OU), Country (C), State (ST), Locality (L), Email.
+- **Ký số CSR**: Tự ký số yêu cầu chứng chỉ bằng hàm băm SHA-256/384/512.
+- **Hiển thị song song**: Khóa riêng tư (`Private Key - PEM`) và Yêu cầu chứng chỉ (`CSR - PEM`), hỗ trợ sao chép vào bộ nhớ tạm hoặc xuất ra file `.key` / `.csr`.
+- **Bộ giải mã cấu trúc ASN.1 / X.509**: Phân tích cú pháp chi tiết nội dung chứng chỉ trực tiếp trên giao diện.
+- **Ánh xạ lệnh OpenSSL CLI**: Hiển thị lệnh `openssl req -new -newkey ...` tương đương.
 
 ## Ba thuật toán
 
