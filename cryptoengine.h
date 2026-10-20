@@ -9,6 +9,14 @@ public:
     using Progress = std::function<void(qint64, qint64)>;
     struct FileInfo { Algorithm algorithm; QString originalName; QString mimeType; bool authenticated; int version; };
 
+    struct TextResult {
+        bool ok{false};
+        QByteArray rawCipher;
+        QString hexString;
+        QString base64String;
+        QString error;
+    };
+
     static QString algorithmName(Algorithm algorithm);
     static void encryptFile(const QString &input, const QString &output, const QString &password,
                             Algorithm algorithm, const Progress &progress = {});
@@ -17,5 +25,12 @@ public:
     static QString suggestedEncryptedPath(const QString &input);
     static QString suggestedDecryptedPath(const QString &input);
     static FileInfo inspectFile(const QString &input);
+
+    static TextResult encryptText(const QString &plainText, const QString &password,
+                                  Algorithm algorithm, bool useBase64 = true);
+    static QString decryptText(const QString &cipherInput, const QString &password,
+                               Algorithm algorithm);
+    static QString generateCliCommand(bool decrypting, const QString &input, const QString &output,
+                                      Algorithm algorithm, bool base64, bool isTextMode);
 };
 
