@@ -16,6 +16,8 @@ qt_add_executable(FileCryptoQt
     mainwindow.ui
     cryptoengine.cpp
     cryptoengine.h
+    csrengine.cpp
+    csrengine.h
     filepreview.cpp
     filepreview.h
     transmissionwidget.cpp
@@ -24,6 +26,10 @@ qt_add_executable(FileCryptoQt
 
 target_link_libraries(FileCryptoQt PRIVATE Qt6::Widgets Qt6::Multimedia Qt6::MultimediaWidgets Qt6::Concurrent OpenSSL::Crypto)
 target_include_directories(FileCryptoQt PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
+
+add_executable(test_lab test/test_lab.cpp cryptoengine.cpp csrengine.cpp)
+target_link_libraries(test_lab PRIVATE Qt6::Core OpenSSL::Crypto)
+target_include_directories(test_lab PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
 
 set_target_properties(FileCryptoQt PROPERTIES
     MACOSX_BUNDLE TRUE
