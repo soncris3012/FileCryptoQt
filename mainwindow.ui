@@ -37,7 +37,7 @@
       </property>
       <widget class="QWidget" name="tabCrypto">
        <attribute name="title">
-        <string>🔐 1. Mã hóa / Giải mã Tập tin &amp; Văn bản</string>
+        <string>1. Mã hóa / Giải mã Tập tin &amp; Văn bản</string>
        </attribute>
        <layout class="QHBoxLayout" name="cryptoTabLayout">
         <property name="spacing">
@@ -94,7 +94,7 @@
               <item>
                <widget class="QRadioButton" name="encryptMode">
                 <property name="text">
-                 <string>🔒 Mã hóa</string>
+                 <string>Mã hóa</string>
                 </property>
                 <property name="checked">
                  <bool>true</bool>
@@ -104,7 +104,7 @@
               <item>
                <widget class="QRadioButton" name="decryptMode">
                 <property name="text">
-                 <string>🔓 Giải mã</string>
+                 <string>Giải mã</string>
                 </property>
                </widget>
               </item>
@@ -120,7 +120,7 @@
               <item>
                <widget class="QRadioButton" name="textModeRadio">
                 <property name="text">
-                 <string>✍️ Văn bản thuần (Plaintext)</string>
+                 <string>Văn bản thuần (Plaintext)</string>
                 </property>
                 <property name="checked">
                  <bool>true</bool>
@@ -130,7 +130,7 @@
               <item>
                <widget class="QRadioButton" name="fileModeRadio">
                 <property name="text">
-                 <string>📁 Tệp / Thư mục</string>
+                 <string>Tệp / Thư mục</string>
                 </property>
                </widget>
               </item>
@@ -319,7 +319,7 @@
               </size>
              </property>
              <property name="text">
-              <string>🔒 BẮT ĐẦU MÃ HÓA</string>
+              <string>BẮT ĐẦU MÃ HÓA</string>
              </property>
             </widget>
            </item>
@@ -488,7 +488,7 @@
                      <item>
                       <widget class="QPushButton" name="copyHexButton">
                        <property name="text">
-                        <string>📋 Sao chép HEX</string>
+                        <string>Sao chép HEX</string>
                        </property>
                       </widget>
                      </item>
@@ -529,7 +529,7 @@
                      <item>
                       <widget class="QPushButton" name="copyBase64Button">
                        <property name="text">
-                        <string>📋 Sao chép Base64</string>
+                        <string>Sao chép Base64</string>
                        </property>
                       </widget>
                      </item>
@@ -618,7 +618,7 @@
       </widget>
       <widget class="QWidget" name="tabCsr">
        <attribute name="title">
-        <string>📜 2. Tạo Yêu cầu Chứng chỉ CSR &amp; Cặp Khóa (PKI / X.509)</string>
+        <string>2. Tạo Yêu cầu Chứng chỉ CSR &amp; Cặp Khóa (PKI / X.509)</string>
        </attribute>
        <layout class="QHBoxLayout" name="csrTabLayout">
         <property name="spacing">
@@ -841,7 +841,7 @@
               </size>
              </property>
              <property name="text">
-              <string>🔑 SINH CẶP KHÓA &amp; TẠO CSR</string>
+              <string>SINH CẶP KHÓA &amp; TẠO CSR</string>
              </property>
             </widget>
            </item>
@@ -853,7 +853,7 @@
                 <bool>false</bool>
                </property>
                <property name="text">
-                <string>💾 Lưu Khóa (.key)</string>
+                <string>Lưu Khóa (.key)</string>
                </property>
               </widget>
              </item>
@@ -863,7 +863,7 @@
                 <bool>false</bool>
                </property>
                <property name="text">
-                <string>💾 Lưu CSR (.csr)</string>
+                <string>Lưu CSR (.csr)</string>
                </property>
               </widget>
              </item>
@@ -951,7 +951,7 @@
                  <item>
                   <widget class="QPushButton" name="copyKeyButton">
                    <property name="text">
-                    <string>📋 Sao chép Khóa</string>
+                    <string>Sao chép Khóa</string>
                    </property>
                   </widget>
                  </item>
@@ -992,7 +992,7 @@
                  <item>
                   <widget class="QPushButton" name="copyCsrButton">
                    <property name="text">
-                    <string>📋 Sao chép CSR</string>
+                    <string>Sao chép CSR</string>
                    </property>
                   </widget>
                  </item>
