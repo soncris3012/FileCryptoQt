@@ -32,14 +32,12 @@ private slots:
     void updateMode();
     void updateInputType();
     void updateAlgorithm();
-    void updateCliPreview();
     void run();
     void operationFinished();
     void openResult();
     void openFolder();
     void copyHex();
     void copyBase64();
-    void copyCliCommand();
 
     // Tab 2 Slots (Tạo CSR)
     void generateCsr();
@@ -47,8 +45,6 @@ private slots:
     void saveCsr();
     void copyPrivateKey();
     void copyCsr();
-    void copyCsrCli();
-    void updateCsrCliPreview();
 
 private:
     void setBusy(bool busy);
