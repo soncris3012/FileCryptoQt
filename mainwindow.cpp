@@ -51,7 +51,7 @@ MainWindow::MainWindow(QWidget* parent)
 
     // Styling
     setStyleSheet(R"(
-        * { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; font-size: 13px; color: #e3e9f1; }
+        * { font-size: 13px; color: #e3e9f1; }
         QMainWindow, QWidget { background: #1a1f29; }
         QTabWidget::pane { border: 1px solid #364253; background: #1a1f29; border-radius: 6px; }
         QTabBar::tab { background: #232a36; color: #8fa0b5; border: 1px solid #364253; border-bottom: none; border-top-left-radius: 6px; border-top-right-radius: 6px; padding: 10px 18px; font-weight: 600; margin-right: 4px; }
@@ -62,7 +62,7 @@ MainWindow::MainWindow(QWidget* parent)
         QGroupBox::title { subcontrol-origin: margin; left: 10px; padding: 0 6px; color: #7cb9f7; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; }
         QLineEdit, QComboBox, QPlainTextEdit { background: #12161e; border: 1px solid #3d4b5d; border-radius: 5px; padding: 7px; color: #f0f4f8; }
         QLineEdit:focus, QComboBox:focus, QPlainTextEdit:focus { border: 1px solid #58a6ff; }
-        QPlainTextEdit { font-family: "JetBrains Mono", Menlo, Consolas, monospace; font-size: 12px; line-height: 1.4; }
+        QPlainTextEdit { font-family: Menlo, Monaco, Consolas, monospace; font-size: 12px; line-height: 1.4; }
         QPushButton { background: #2b3545; border: 1px solid #48576c; border-radius: 5px; padding: 7px 12px; color: #e1e8f0; font-weight: 500; }
         QPushButton:hover { background: #38465b; border-color: #637794; }
         QPushButton:pressed { background: #1e2632; }
@@ -187,7 +187,7 @@ void MainWindow::updateInput() {
             bytes += QFileInfo(x).size();
             if (x.endsWith(".fcq", Qt::CaseInsensitive)) ++fcq;
         }
-        ui->fileInfoLabel->setText(QString("📁 %1\n%2 tệp • %3 MB • %4 tệp FCQ").arg(f.fileName()).arg(files).arg(bytes / 1048576.0, 0, 'f', 2).arg(fcq));
+        ui->fileInfoLabel->setText(QString("[Thư mục] %1\n%2 tệp • %3 MB • %4 tệp FCQ").arg(f.fileName()).arg(files).arg(bytes / 1048576.0, 0, 'f', 2).arg(fcq));
         ui->sourcePreview->clearPreview(QString("THƯ MỤC NGUỒN\n\n%1 tệp sẽ được xử lý đệ quy\nGiữ nguyên cấu trúc thư mục con").arg(files));
         QString suffix = m_decrypting ? "_decrypted" : "_encrypted";
         ui->outputEdit->setText(QDir(f.absolutePath()).filePath(f.fileName() + suffix));
@@ -216,7 +216,7 @@ void MainWindow::updateInput() {
 void MainWindow::updateMode() {
     m_decrypting = ui->decryptMode->isChecked();
     ui->algorithmBox->setEnabled(!m_decrypting);
-    ui->runButton->setText(m_decrypting ? "🔓 BẮT ĐẦU GIẢI MÃ" : "🔒 BẮT ĐẦU MÃ HÓA");
+    ui->runButton->setText(m_decrypting ? "BẮT ĐẦU GIẢI MÃ" : "BẮT ĐẦU MÃ HÓA");
     ui->sourcePreviewGroup->setTitle(m_decrypting ? "TỆP MÃ HÓA • HEX" : "TỆP GỐC • Xem trước");
     ui->resultPreviewGroup->setTitle(m_decrypting ? "NỘI DUNG KHÔI PHỤC • Xem trực tiếp" : "DỮ LIỆU MÃ HÓA • HEX");
 
@@ -253,9 +253,9 @@ QString MainWindow::algorithmExplanation() const {
 void MainWindow::updateAlgorithm() {
     if (ui->algorithmBox->currentIndex() < 0) return;
     auto a = CryptoEngine::Algorithm(ui->algorithmBox->currentData().toInt());
-    ui->algorithmInfo->setText(a == CryptoEngine::Algorithm::Aes256Gcm ? "✓ AEAD GCM • Có xác thực • Khuyến nghị" :
-                               a == CryptoEngine::Algorithm::ChaCha20Poly1305 ? "✓ ChaCha20-Poly1305 • Hiệu năng cao" :
-                               "✓ AES-256-CBC • Chuẩn bài giảng OpenSSL");
+    ui->algorithmInfo->setText(a == CryptoEngine::Algorithm::Aes256Gcm ? "[OK] AEAD GCM • Có xác thực • Khuyến nghị" :
+                               a == CryptoEngine::Algorithm::ChaCha20Poly1305 ? "[OK] ChaCha20-Poly1305 • Hiệu năng cao" :
+                               "[OK] AES-256-CBC • Chuẩn bài giảng OpenSSL");
     if (!m_decrypting) {
         ui->detailText->setPlainText(algorithmExplanation() + "\n\nKhóa và IV được dẫn xuất bằng hàm băm mật khẩu PBKDF2-HMAC-SHA256 kết hợp Salt ngẫu nhiên.");
     }
@@ -310,7 +310,7 @@ void MainWindow::run() {
             ui->hexOutputEdit->setPlainText(res.hexString);
             ui->base64OutputEdit->setPlainText(res.base64String);
             ui->statusLabel->setText(QString("Mã hóa thành công • %1 bytes dữ liệu nhị phân").arg(res.rawCipher.size()));
-            ui->detailText->setPlainText(QString("✓ MÃ HÓA VĂN BẢN THÀNH CÔNG\n\n"
+            ui->detailText->setPlainText(QString("[OK] MÃ HÓA VĂN BẢN THÀNH CÔNG\n\n"
                                                  "1. Dữ liệu gốc: %1 ký tự UTF-8 (%2 bytes)\n"
                                                  "2. Chuỗi Hex (Binary Ciphertext): Hiển thị từng byte nhị phân thực tế sau khi qua thuật toán %3.\n"
                                                  "3. Chuỗi Base64 (-a): Bản mã nhị phân được mã hóa sang bảng chữ cái 64 ký tự ASCII an toàn để gửi qua email, JSON hoặc lưu trữ cơ sở dữ liệu.")
@@ -324,7 +324,7 @@ void MainWindow::run() {
                 ui->hexOutputEdit->setPlainText(QString("Kích thước bản mã: %1 ký tự").arg(text.length()));
                 ui->base64OutputEdit->setPlainText(restored);
                 ui->statusLabel->setText("Giải mã văn bản thành công!");
-                ui->detailText->setPlainText("✓ GIẢI MÃ VĂN BẢN THÀNH CÔNG\n\nNội dung văn bản thuần (Plaintext) đã được khôi phục chính xác ở ô bên phải.");
+                ui->detailText->setPlainText("[OK] GIẢI MÃ VĂN BẢN THÀNH CÔNG\n\nNội dung văn bản thuần (Plaintext) đã được khôi phục chính xác ở ô bên phải.");
             } catch (const std::exception& e) {
                 ui->progressBar->setValue(0);
                 ui->transmissionWidget->finish(false);
@@ -439,7 +439,7 @@ void MainWindow::operationFinished() {
     ui->statusLabel->setText(QString("Hoàn tất • %1 • %2").arg(alg, QFileInfo(out).fileName()));
 
     if (folder) {
-        ui->resultPreview->clearPreview(QString("✓ HOÀN TẤT THƯ MỤC\n\nĐã %1 %2 tệp\n\n%3").arg(m_decrypting ? "giải mã" : "mã hóa").arg(count).arg(out));
+        ui->resultPreview->clearPreview(QString("[OK] HOÀN TẤT THƯ MỤC\n\nĐã %1 %2 tệp\n\n%3").arg(m_decrypting ? "giải mã" : "mã hóa").arg(count).arg(out));
     } else {
         ui->resultPreview->showFile(out, !m_decrypting);
     }
@@ -448,11 +448,11 @@ void MainWindow::operationFinished() {
     ui->openFolderButton->setEnabled(true);
 
     if (folder) {
-        ui->detailText->setPlainText(QString("✓ Đã %1 toàn bộ %2 tệp trong thư mục.\n\nNguồn: %3\nKết quả: %4").arg(m_decrypting ? "giải mã" : "mã hóa").arg(count).arg(ui->inputEdit->text(), out));
+        ui->detailText->setPlainText(QString("[OK] Đã %1 toàn bộ %2 tệp trong thư mục.\n\nNguồn: %3\nKết quả: %4").arg(m_decrypting ? "giải mã" : "mã hóa").arg(count).arg(ui->inputEdit->text(), out));
     } else {
         QString before = m_decrypting ? "Bản mã và thẻ xác thực" : "Toàn bộ nội dung gốc";
         QString after = m_decrypting ? "toàn bộ nội dung gốc đã được khôi phục" : "bản mã có entropy cao, không còn nhận ra cấu trúc ban đầu";
-        ui->detailText->setPlainText(QString("✓ %1\n\n%2 đã đi qua %3 và trở thành %4. Đã xử lý đủ %5 byte của tệp nguồn.")
+        ui->detailText->setPlainText(QString("[OK] %1\n\n%2 đã đi qua %3 và trở thành %4. Đã xử lý đủ %5 byte của tệp nguồn.")
                                      .arg(m_decrypting ? "Giải mã và xác thực thành công" : "Mã hóa và đóng gói thành công", before, alg, after)
                                      .arg(QFileInfo(ui->inputEdit->text()).size()));
     }
@@ -474,12 +474,12 @@ void MainWindow::openFolder() {
 
 void MainWindow::copyHex() {
     QGuiApplication::clipboard()->setText(ui->hexOutputEdit->toPlainText());
-    ui->statusLabel->setText("✓ Đã sao chép chuỗi mã Hex vào bộ nhớ tạm!");
+    ui->statusLabel->setText("[OK] Đã sao chép chuỗi mã Hex vào bộ nhớ tạm!");
 }
 
 void MainWindow::copyBase64() {
     QGuiApplication::clipboard()->setText(ui->base64OutputEdit->toPlainText());
-    ui->statusLabel->setText("✓ Đã sao chép chuỗi Base64 vào bộ nhớ tạm!");
+    ui->statusLabel->setText("[OK] Đã sao chép chuỗi Base64 vào bộ nhớ tạm!");
 }
 
 
@@ -515,7 +515,7 @@ void MainWindow::generateCsr() {
 
     ui->csrSaveKeyButton->setEnabled(true);
     ui->csrSaveCsrButton->setEnabled(true);
-    ui->csrStatusLabel->setText("✓ Sinh cặp khóa và tạo CSR thành công!");
+    ui->csrStatusLabel->setText("[OK] Sinh cặp khóa và tạo CSR thành công!");
 }
 
 void MainWindow::savePrivateKey() {
@@ -524,7 +524,7 @@ void MainWindow::savePrivateKey() {
         QFile f(p);
         if (f.open(QIODevice::WriteOnly | QIODevice::Text)) {
             f.write(ui->csrKeyEdit->toPlainText().toUtf8());
-            ui->csrStatusLabel->setText("✓ Đã lưu Private Key vào: " + QFileInfo(p).fileName());
+            ui->csrStatusLabel->setText("[OK] Đã lưu Private Key vào: " + QFileInfo(p).fileName());
         }
     }
 }
@@ -535,19 +535,19 @@ void MainWindow::saveCsr() {
         QFile f(p);
         if (f.open(QIODevice::WriteOnly | QIODevice::Text)) {
             f.write(ui->csrOutputEdit->toPlainText().toUtf8());
-            ui->csrStatusLabel->setText("✓ Đã lưu CSR vào: " + QFileInfo(p).fileName());
+            ui->csrStatusLabel->setText("[OK] Đã lưu CSR vào: " + QFileInfo(p).fileName());
         }
     }
 }
 
 void MainWindow::copyPrivateKey() {
     QGuiApplication::clipboard()->setText(ui->csrKeyEdit->toPlainText());
-    ui->csrStatusLabel->setText("✓ Đã sao chép Private Key vào bộ nhớ tạm!");
+    ui->csrStatusLabel->setText("[OK] Đã sao chép Private Key vào bộ nhớ tạm!");
 }
 
 void MainWindow::copyCsr() {
     QGuiApplication::clipboard()->setText(ui->csrOutputEdit->toPlainText());
-    ui->csrStatusLabel->setText("✓ Đã sao chép CSR vào bộ nhớ tạm!");
+    ui->csrStatusLabel->setText("[OK] Đã sao chép CSR vào bộ nhớ tạm!");
 }
 
 
