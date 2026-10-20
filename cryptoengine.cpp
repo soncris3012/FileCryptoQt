@@ -60,3 +60,217 @@ CryptoEngine::Algorithm CryptoEngine::decryptFile(const QString&inPath,const QSt
     QSaveFile out(outPath);if(!out.open(QIODevice::WriteOnly))fail("Không thể tạo tệp đầu ra.");Ctx ctx(EVP_CIPHER_CTX_new(),EVP_CIPHER_CTX_free);if(!ctx)fail("Không thể khởi tạo giải mã.");if(EVP_DecryptInit_ex(ctx.get(),cipherFor(p.algorithm),nullptr,nullptr,nullptr)!=1)fail("Không thể khởi tạo thuật toán.");if(aead(p.algorithm)&&EVP_CIPHER_CTX_ctrl(ctx.get(),EVP_CTRL_AEAD_SET_IVLEN,p.version==1?12:p.iv.size(),nullptr)!=1)fail("Không thể đặt IV.");if(EVP_DecryptInit_ex(ctx.get(),nullptr,nullptr,(const unsigned char*)keys.constData(),(const unsigned char*)p.iv.constData())!=1)fail("Không thể đặt khóa.");int n=0;if(p.version==2&&aead(p.algorithm)&&EVP_DecryptUpdate(ctx.get(),nullptr,&n,(const unsigned char*)p.header.constData(),p.header.size())!=1)fail("Không thể xác thực metadata.");std::unique_ptr<Hmac> mac;if(p.version==2&&!aead(p.algorithm)){mac=std::make_unique<Hmac>(keys.mid(32,32));mac->add(p.header);}
     QByteArray src(ChunkSize,Qt::Uninitialized),dst(ChunkSize+EVP_MAX_BLOCK_LENGTH,Qt::Uninitialized);qint64 done=0;while(in.pos()<p.payloadEnd){qint64 want=qMin<qint64>(src.size(),p.payloadEnd-in.pos()),got=in.read(src.data(),want);if(got<=0)fail("Lỗi đọc tệp mã hóa.");QByteArray chunk=src.left(got);if(mac)mac->add(chunk);if(EVP_DecryptUpdate(ctx.get(),(unsigned char*)dst.data(),&n,(const unsigned char*)chunk.constData(),chunk.size())!=1)fail("Giải mã thất bại.");writeAll(out,dst.left(n));done+=got;if(progress)progress(done,p.payloadEnd-p.payloadStart);}if(mac){QByteArray expected=mac->finish();if(auth.size()!=expected.size()||CRYPTO_memcmp(auth.constData(),expected.constData(),expected.size())!=0)fail("Sai mật khẩu hoặc tệp đã bị thay đổi.");}if(aead(p.algorithm)&&EVP_CIPHER_CTX_ctrl(ctx.get(),EVP_CTRL_AEAD_SET_TAG,TagSize,auth.data())!=1)fail("Không thể đọc thẻ xác thực.");if(EVP_DecryptFinal_ex(ctx.get(),(unsigned char*)dst.data(),&n)!=1)fail("Sai mật khẩu hoặc tệp đã bị thay đổi.");writeAll(out,dst.left(n));if(!out.commit())fail("Không thể hoàn tất tệp đầu ra.");return p.algorithm;
 }
+
+CryptoEngine::TextResult CryptoEngine::encryptText(const QString& plainText, const QString& password, Algorithm alg, bool useBase64) {
+    Q_UNUSED(useBase64);
+    TextResult r;
+    if (password.isEmpty()) {
+        r.error = "Vui lòng nhập mật khẩu mã hóa.";
+        return r;
+    }
+    QByteArray plainBytes = plainText.toUtf8();
+    if (plainBytes.isEmpty()) {
+        r.error = "Văn bản đầu vào trống.";
+        return r;
+    }
+
+    try {
+        if (alg == Algorithm::Aes256Cbc) {
+            QByteArray salt = randomBytes(8);
+            QByteArray kiv(48, Qt::Uninitialized);
+            QByteArray passBytes = password.toUtf8();
+            if (PKCS5_PBKDF2_HMAC(passBytes.constData(), passBytes.size(),
+                                  (const unsigned char*)salt.constData(), salt.size(),
+                                  10000, EVP_sha256(), 48, (unsigned char*)kiv.data()) != 1) {
+                fail("Dẫn xuất khóa PBKDF2 thất bại.");
+            }
+            const unsigned char* key = (const unsigned char*)kiv.constData();
+            const unsigned char* iv = (const unsigned char*)kiv.constData() + 32;
+
+            Ctx ctx(EVP_CIPHER_CTX_new(), EVP_CIPHER_CTX_free);
+            if (!ctx || EVP_EncryptInit_ex(ctx.get(), EVP_aes_256_cbc(), nullptr, key, iv) != 1) {
+                fail("Khởi tạo mã hóa AES-256-CBC thất bại.");
+            }
+
+            QByteArray cipher(plainBytes.size() + EVP_MAX_BLOCK_LENGTH, Qt::Uninitialized);
+            int outLen1 = 0, outLen2 = 0;
+            if (EVP_EncryptUpdate(ctx.get(), (unsigned char*)cipher.data(), &outLen1,
+                                  (const unsigned char*)plainBytes.constData(), plainBytes.size()) != 1) {
+                fail("Mã hóa dữ liệu thất bại.");
+            }
+            if (EVP_EncryptFinal_ex(ctx.get(), (unsigned char*)cipher.data() + outLen1, &outLen2) != 1) {
+                fail("Hoàn tất mã hóa (padding) thất bại.");
+            }
+            cipher.resize(outLen1 + outLen2);
+
+            QByteArray container = QByteArray("Salted__", 8) + salt + cipher;
+            r.rawCipher = container;
+            r.hexString = QString::fromLatin1(container.toHex(' ').toUpper());
+            r.base64String = QString::fromLatin1(container.toBase64());
+            r.ok = true;
+        } else {
+            // AEAD Modes (GCM or ChaCha20-Poly1305)
+            QByteArray salt = randomBytes(16);
+            int ivLen = 12;
+            QByteArray iv = randomBytes(ivLen);
+            QByteArray key = derive(password, salt, 32);
+
+            Ctx ctx(EVP_CIPHER_CTX_new(), EVP_CIPHER_CTX_free);
+            const EVP_CIPHER* c = cipherFor(alg);
+            if (!ctx || EVP_EncryptInit_ex(ctx.get(), c, nullptr, nullptr, nullptr) != 1) {
+                fail("Khởi tạo thuật toán AEAD thất bại.");
+            }
+            if (EVP_CIPHER_CTX_ctrl(ctx.get(), EVP_CTRL_AEAD_SET_IVLEN, ivLen, nullptr) != 1) {
+                fail("Đặt độ dài IV thất bại.");
+            }
+            if (EVP_EncryptInit_ex(ctx.get(), nullptr, nullptr, (const unsigned char*)key.constData(), (const unsigned char*)iv.constData()) != 1) {
+                fail("Đặt khóa AEAD thất bại.");
+            }
+
+            QByteArray cipher(plainBytes.size() + EVP_MAX_BLOCK_LENGTH, Qt::Uninitialized);
+            int outLen1 = 0, outLen2 = 0;
+            if (EVP_EncryptUpdate(ctx.get(), (unsigned char*)cipher.data(), &outLen1,
+                                  (const unsigned char*)plainBytes.constData(), plainBytes.size()) != 1) {
+                fail("Mã hóa AEAD thất bại.");
+            }
+            if (EVP_EncryptFinal_ex(ctx.get(), (unsigned char*)cipher.data() + outLen1, &outLen2) != 1) {
+                fail("Hoàn tất mã hóa AEAD thất bại.");
+            }
+            cipher.resize(outLen1 + outLen2);
+
+            QByteArray tag(TagSize, Qt::Uninitialized);
+            if (EVP_CIPHER_CTX_ctrl(ctx.get(), EVP_CTRL_AEAD_GET_TAG, TagSize, tag.data()) != 1) {
+                fail("Tạo thẻ xác thực AEAD thất bại.");
+            }
+
+            QByteArray magic = (alg == Algorithm::Aes256Gcm) ? "FCQGCM" : "FCQCHA";
+            QByteArray container = magic + salt + iv + tag + cipher;
+            r.rawCipher = container;
+            r.hexString = QString::fromLatin1(container.toHex(' ').toUpper());
+            r.base64String = QString::fromLatin1(container.toBase64());
+            r.ok = true;
+        }
+    } catch (const std::exception& e) {
+        r.error = QString::fromStdString(e.what());
+    }
+    return r;
+}
+
+QString CryptoEngine::decryptText(const QString& cipherInput, const QString& password, Algorithm alg) {
+    if (password.isEmpty()) fail("Vui lòng nhập mật khẩu giải mã.");
+    QString trimmed = cipherInput.trimmed();
+    if (trimmed.isEmpty()) fail("Dữ liệu bản mã trống.");
+
+    QByteArray raw;
+    QString noSpaces = trimmed;
+    noSpaces.remove(' ');
+    noSpaces.remove('\n');
+    noSpaces.remove('\r');
+
+    QByteArray b64Candidate = QByteArray::fromBase64(noSpaces.toLatin1());
+    if (!b64Candidate.isEmpty() && (b64Candidate.startsWith("Salted__") || b64Candidate.startsWith("FCQ"))) {
+        raw = b64Candidate;
+    } else {
+        QByteArray hexCandidate = QByteArray::fromHex(noSpaces.toLatin1());
+        if (!hexCandidate.isEmpty()) raw = hexCandidate;
+        else raw = b64Candidate;
+    }
+
+    if (raw.size() < 16) fail("Bản mã không đủ độ dài hợp lệ.");
+
+    if (raw.startsWith("Salted__")) {
+        if (raw.size() < 16) fail("Bản mã OpenSSL không hợp lệ.");
+        QByteArray salt = raw.mid(8, 8);
+        QByteArray cipher = raw.mid(16);
+
+        int iterationsList[] = {10000, 200000};
+        for (int iters : iterationsList) {
+            try {
+                QByteArray kiv(48, Qt::Uninitialized);
+                QByteArray passBytes = password.toUtf8();
+                if (PKCS5_PBKDF2_HMAC(passBytes.constData(), passBytes.size(),
+                                      (const unsigned char*)salt.constData(), salt.size(),
+                                      iters, EVP_sha256(), 48, (unsigned char*)kiv.data()) != 1) continue;
+
+                const unsigned char* key = (const unsigned char*)kiv.constData();
+                const unsigned char* iv = (const unsigned char*)kiv.constData() + 32;
+
+                Ctx ctx(EVP_CIPHER_CTX_new(), EVP_CIPHER_CTX_free);
+                if (!ctx || EVP_DecryptInit_ex(ctx.get(), EVP_aes_256_cbc(), nullptr, key, iv) != 1) continue;
+
+                QByteArray plain(cipher.size() + EVP_MAX_BLOCK_LENGTH, Qt::Uninitialized);
+                int outLen1 = 0, outLen2 = 0;
+                if (EVP_DecryptUpdate(ctx.get(), (unsigned char*)plain.data(), &outLen1,
+                                      (const unsigned char*)cipher.constData(), cipher.size()) != 1) continue;
+                if (EVP_DecryptFinal_ex(ctx.get(), (unsigned char*)plain.data() + outLen1, &outLen2) != 1) continue;
+
+                plain.resize(outLen1 + outLen2);
+                return QString::fromUtf8(plain);
+            } catch (...) {}
+        }
+        fail("Sai mật khẩu hoặc dữ liệu bản mã đã bị thay đổi.");
+    } else if (raw.startsWith("FCQGCM") || raw.startsWith("FCQCHA")) {
+        bool isGcm = raw.startsWith("FCQGCM");
+        Algorithm usedAlg = isGcm ? Algorithm::Aes256Gcm : Algorithm::ChaCha20Poly1305;
+        if (raw.size() < 6 + 16 + 12 + TagSize) fail("Bản mã AEAD bị thiếu dữ liệu.");
+
+        QByteArray salt = raw.mid(6, 16);
+        QByteArray iv = raw.mid(22, 12);
+        QByteArray tag = raw.mid(34, TagSize);
+        QByteArray cipher = raw.mid(34 + TagSize);
+
+        QByteArray key = derive(password, salt, 32);
+
+        Ctx ctx(EVP_CIPHER_CTX_new(), EVP_CIPHER_CTX_free);
+        const EVP_CIPHER* c = cipherFor(usedAlg);
+        if (!ctx || EVP_DecryptInit_ex(ctx.get(), c, nullptr, nullptr, nullptr) != 1) fail("Khởi tạo giải mã AEAD thất bại.");
+        if (EVP_CIPHER_CTX_ctrl(ctx.get(), EVP_CTRL_AEAD_SET_IVLEN, 12, nullptr) != 1) fail("Đặt độ dài IV thất bại.");
+        if (EVP_DecryptInit_ex(ctx.get(), nullptr, nullptr, (const unsigned char*)key.constData(), (const unsigned char*)iv.constData()) != 1) fail("Đặt khóa giải mã AEAD thất bại.");
+
+        QByteArray plain(cipher.size() + EVP_MAX_BLOCK_LENGTH, Qt::Uninitialized);
+        int outLen1 = 0, outLen2 = 0;
+        if (EVP_DecryptUpdate(ctx.get(), (unsigned char*)plain.data(), &outLen1,
+                              (const unsigned char*)cipher.constData(), cipher.size()) != 1) fail("Giải mã AEAD thất bại.");
+        if (EVP_CIPHER_CTX_ctrl(ctx.get(), EVP_CTRL_AEAD_SET_TAG, TagSize, tag.data()) != 1) fail("Thẻ xác thực AEAD không khớp.");
+        if (EVP_DecryptFinal_ex(ctx.get(), (unsigned char*)plain.data() + outLen1, &outLen2) != 1) fail("Sai mật khẩu hoặc bản mã đã bị sửa đổi.");
+
+        plain.resize(outLen1 + outLen2);
+        return QString::fromUtf8(plain);
+    }
+
+    Q_UNUSED(alg);
+    fail("Định dạng bản mã không được nhận diện (cần tiền tố Salted__ hoặc FCQ).");
+    return {};
+}
+
+QString CryptoEngine::generateCliCommand(bool decrypting, const QString& input, const QString& output,
+                                        Algorithm algorithm, bool base64, bool isTextMode) {
+    QString cipherFlag;
+    switch (algorithm) {
+    case Algorithm::Aes256Cbc: cipherFlag = "aes-256-cbc"; break;
+    case Algorithm::Aes256Gcm: cipherFlag = "aes-256-gcm"; break;
+    case Algorithm::ChaCha20Poly1305: cipherFlag = "chacha20-poly1305"; break;
+    }
+
+    if (isTextMode) {
+        if (!decrypting) {
+            QString snippet = input.isEmpty() ? "Noi dung mau" : input.left(25).replace("\"", "\\\"");
+            return QString("echo -n \"%1\" | openssl enc -%2 -salt -pbkdf2%3 -pass pass:<password>")
+                .arg(snippet, cipherFlag, base64 ? " -a" : "");
+        } else {
+            QString snippet = input.isEmpty() ? "U2FsdGVkX18..." : input.left(25).replace("\"", "\\\"");
+            return QString("echo \"%1\" | openssl enc -d -%2 -pbkdf2%3 -pass pass:<password>")
+                .arg(snippet, cipherFlag, base64 ? " -a" : "");
+        }
+    } else {
+        QString inF = input.isEmpty() ? "taptin_goc.bin" : input;
+        QString outF = output.isEmpty() ? (decrypting ? "taptin_giaima.bin" : "taptin_mahoa.enc") : output;
+        if (!decrypting) {
+            return QString("openssl enc -%1 -salt -pbkdf2%2 -in \"%3\" -out \"%4\" -pass pass:<password>")
+                .arg(cipherFlag, base64 ? " -a" : "", inF, outF);
+        } else {
+            return QString("openssl enc -d -%1 -pbkdf2%2 -in \"%3\" -out \"%4\" -pass pass:<password>")
+                .arg(cipherFlag, base64 ? " -a" : "", inF, outF);
+        }
+    }
+}
