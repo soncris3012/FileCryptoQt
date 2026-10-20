@@ -80,9 +80,62 @@ async function runTests() {
         assert(failedTamper, "Phải ném lỗi khi dữ liệu bản mã bị can thiệp");
     }
 
-    console.log("\n=========================================");
-    console.log(" TẤT CẢ 3 THUẬT TOÁN ĐÃ ĐẠT 100% TEST! ");
-    console.log("=========================================\n");
+    // --- KIỂM THỬ MÃ HÓA / GIẢI MÃ VĂN BẢN THUẦN (HEX & BASE64) ---
+    console.log("\n--- Kiểm tra Mã hóa & Giải mã Văn bản thuần (Text Mode) ---");
+    const textPlain = "Bảo mật thông tin 2026 - Kiểm thử OpenSSL Salted__ & CSR!";
+    const textPass = "MatKhauLab2026";
+
+    // 1. AES-256-CBC (OpenSSL CLI Salted__ + PBKDF2)
+    const encCbc = await CryptoEngine.encryptText(textPlain, textPass, CryptoEngine.Algorithm.Aes256Cbc, true);
+    assert(encCbc.ok, "Mã hóa văn bản CBC phải thành công");
+    assert(encCbc.base64String.startsWith("U2FsdGVk"), "Bản mã Base64 OpenSSL phải bắt đầu bằng U2FsdGVk (Salted__)");
+    assert(encCbc.hexString.startsWith("53 61 6C 74 65 64 5F 5F"), "Bản mã Hex phải bắt đầu bằng 53 61 6C 74 65 64 5F 5F (Salted__)");
+    console.log(`✓ Mã hóa OpenSSL AES-256-CBC thành công! Base64: ${encCbc.base64String.substring(0, 32)}...`);
+
+    // Giải mã từ Base64
+    const decCbcB64 = await CryptoEngine.decryptText(encCbc.base64String, textPass);
+    assert.strictEqual(decCbcB64, textPlain, "Giải mã từ chuỗi Base64 phải khớp văn bản gốc");
+    console.log("✓ Giải mã từ chuỗi Base64 thành công khớp 100% dữ liệu gốc!");
+
+    // Giải mã từ Hex
+    const decCbcHex = await CryptoEngine.decryptText(encCbc.hexString, textPass);
+    assert.strictEqual(decCbcHex, textPlain, "Giải mã từ chuỗi Hex phải khớp văn bản gốc");
+    console.log("✓ Giải mã từ chuỗi Hex thành công khớp 100% dữ liệu gốc!");
+
+    // 2. AES-256-GCM & ChaCha20-Poly1305 Text Mode
+    for (const alg of [CryptoEngine.Algorithm.Aes256Gcm, CryptoEngine.Algorithm.ChaCha20Poly1305]) {
+        const algName = CryptoEngine.AlgorithmNames[alg];
+        const encText = await CryptoEngine.encryptText(textPlain, textPass, alg, true);
+        assert(encText.ok, `Mã hóa văn bản ${algName} phải thành công`);
+        const decText = await CryptoEngine.decryptText(encText.base64String, textPass);
+        assert.strictEqual(decText, textPlain, `Giải mã văn bản ${algName} phải khớp`);
+        console.log(`✓ Mã hóa & Giải mã văn bản ${algName} thành công!`);
+    }
+
+    // --- KIỂM THỬ CSRENGINE (RSA KEYPAIR & PKCS#10 CSR) ---
+    console.log("\n--- Kiểm tra Sinh Cặp khóa RSA & Chứng chỉ CSR (PKCS#10) ---");
+    const CsrEngine = require('../js/csr-engine.js');
+    const csrRes = await CsrEngine.generate({
+        commonName: "cryptolab.local",
+        organization: "CryptoLab Security Academy",
+        organizationalUnit: "Cyber Security Lab",
+        country: "VN",
+        state: "Ha Noi",
+        locality: "Cau Giay",
+        email: "security@cryptolab.local"
+    }, 2048, "SHA-256");
+
+    assert(csrRes.success, "Sinh CSR phải thành công");
+    assert(csrRes.privateKeyPem.includes("BEGIN PRIVATE KEY"), "Private Key phải ở định dạng PEM PKCS#8");
+    assert(csrRes.csrPem.includes("BEGIN CERTIFICATE REQUEST"), "CSR phải ở định dạng PEM PKCS#10");
+    assert.strictEqual(csrRes.verified, true, "Chữ ký số tự ký (Self-Signature) của CSR phải được xác thực hợp lệ");
+    console.log(`✓ Sinh cặp khóa RSA 2048-bit thành công! Private Key PEM: ${csrRes.privateKeyPem.length} ký tự`);
+    console.log(`✓ Tạo chứng chỉ CSR X.509 thành công! CSR PEM: ${csrRes.csrPem.length} ký tự`);
+    console.log(`✓ Chữ ký số tự ký (Self-Signature) được xác thực: HỢP LỆ 100%`);
+
+    console.log("\n=======================================================");
+    console.log(" TẤT CẢ CÁC TÍNH NĂNG WEB ĐÃ ĐỒNG BỘ & ĐẠT 100% TEST! ");
+    console.log("=======================================================\n");
 }
 
 runTests().catch(err => {

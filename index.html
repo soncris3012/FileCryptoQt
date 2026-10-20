@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FileCrypto Web — CryptoLab Trực tuyến</title>
-    <meta name="description" content="Ứng dụng mã hóa và giải mã tệp tin an toàn 100% client-side trong trình duyệt. Tương thích định dạng FCQ2/FCQ1 với AES-256-GCM, ChaCha20-Poly1305 và AES-256-CBC.">
+    <title>CryptoLab — An Toàn Thông Tin &amp; Mật Mã Ứng Dụng (Web Client)</title>
+    <meta name="description" content="Ứng dụng mã hóa và giải mã tệp tin, văn bản thuần (Hex/Base64) và sinh cặp khóa RSA kèm CSR X.509 100% Client-Side. Đồng bộ 100% với phiên bản Desktop macOS & Windows.">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
@@ -18,7 +18,7 @@
                 <div class="brand-wrapper">
                     <div class="brand-icon">🛡️</div>
                     <div class="brand-text">
-                        <h1>FileCrypto Web <span class="badge-client">100% Client-Side</span></h1>
+                        <h1>CryptoLab Web <span class="badge-client">100% Client-Side</span></h1>
                     </div>
                 </div>
                 <div class="platform-badges">
@@ -33,57 +33,86 @@
 
         <!-- Tabs Navigation -->
         <div class="tabs-nav">
-            <button class="tab-btn active" data-tab="encrypt">🔒 Mã hóa tệp</button>
-            <button class="tab-btn" data-tab="decrypt">🔓 Giải mã tệp</button>
-            <button class="tab-btn" data-tab="inspect">🔍 Soi Header FCQ</button>
-            <button class="tab-btn" data-tab="docs">📖 Thuật toán & Kiểm thử</button>
+            <button class="tab-btn active" data-tab="crypto">1. Mã hóa / Giải mã Tập tin &amp; Văn bản</button>
+            <button class="tab-btn" data-tab="csr">2. Tạo Yêu cầu CSR &amp; Cặp Khóa (PKI / X.509)</button>
+            <button class="tab-btn" data-tab="inspect">3. Soi Header FCQ</button>
+            <button class="tab-btn" data-tab="docs">4. Thuật toán &amp; Tự kiểm thử</button>
         </div>
 
         <!-- Main Content Area -->
         <div class="tab-content">
-            <!-- Mode 1, 2, 3: Operational View -->
-            <div id="operationWrapper">
+            <!-- TAB 1: Mã hóa / Giải mã Tập tin & Văn bản -->
+            <div id="cryptoPane" class="tab-pane active">
                 <div class="main-grid">
-                    <!-- Left Column: Controls & Dropzone -->
+                    <!-- Left Column: Controls & Input -->
                     <div class="glass-card">
-                        <h2 class="card-title">📁 Chọn tệp tin</h2>
+                        <h2 class="card-title">⚙️ Cấu hình Dữ liệu &amp; Bảo mật</h2>
 
-                        <!-- Dropzone -->
-                        <div class="dropzone" id="dropzone">
-                            <div class="dropzone-icon">📥</div>
-                            <div class="dropzone-title">Kéo thả tệp hoặc thư mục vào đây để mã hóa</div>
-                            <div class="dropzone-subtitle">Hỗ trợ mọi định dạng: Văn bản, Ảnh, Video, File nhị phân lớn</div>
-                            <div class="dropzone-actions">
-                                <label class="btn btn-outline" for="fileInput">
-                                    📄 Chọn tệp
-                                    <input type="file" id="fileInput" style="display: none;">
-                                </label>
-                                <label class="btn btn-outline" for="folderInput">
-                                    📁 Chọn thư mục
-                                    <input type="file" id="folderInput" webkitdirectory directory style="display: none;">
-                                </label>
-                            </div>
+                        <!-- Mode Switcher (Segmented) -->
+                        <label class="form-label">CHẾ ĐỘ HOẠT ĐỘNG</label>
+                        <div class="segmented-control">
+                            <button type="button" class="segmented-btn active" id="cryptoModeEncrypt" data-mode="encrypt">🔒 Mã hóa</button>
+                            <button type="button" class="segmented-btn" id="cryptoModeDecrypt" data-mode="decrypt">🔓 Giải mã</button>
                         </div>
 
-                        <!-- Selected File Meta Card -->
-                        <div class="file-info-card" id="fileInfoCard">
-                            <div class="file-info-meta">
-                                <div class="file-icon">📦</div>
-                                <div class="file-details">
-                                    <h4 id="selectedFileName">filename.ext</h4>
-                                    <span id="selectedFileSize">0 KB</span> • <span id="selectedFileType">text/plain</span>
+                        <!-- Input Source Switcher (Segmented) -->
+                        <label class="form-label">LOẠI ĐẦU VÀO</label>
+                        <div class="segmented-control">
+                            <button type="button" class="segmented-btn active" id="cryptoSourceText" data-source="text">✍️ Văn bản thuần (Plaintext)</button>
+                            <button type="button" class="segmented-btn" id="cryptoSourceFile" data-source="file">📁 Tệp / Thư mục</button>
+                        </div>
+
+                        <!-- Text Input Section -->
+                        <div id="textInputWrapper" class="form-group">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                                <label class="form-label" style="margin-bottom: 0;">Nội dung văn bản đầu vào:</label>
+                                <div style="display: flex; gap: 6px;">
+                                    <button type="button" class="btn-sm-copy" id="clearTextBtn">Xóa</button>
+                                    <button type="button" class="btn-sm-copy" id="sampleTextBtn">Mẫu bài giảng</button>
                                 </div>
                             </div>
-                            <button class="btn-icon-danger" id="removeFileBtn" title="Hủy chọn tệp">✕</button>
+                            <textarea id="textInputEdit" class="output-textarea" style="min-height: 110px;" placeholder="Nhập chuỗi văn bản cần mã hóa (hoặc dán bản mã Hex/Base64 để giải mã)...">Bài thực hành Mật mã học OpenSSL: AES-256-CBC, Base64 (-a) và CSR.</textarea>
                         </div>
 
-                        <!-- Algorithm Selector (Encrypt only) -->
+                        <!-- File Input Section (Hidden initially) -->
+                        <div id="fileInputWrapper" class="form-group" style="display: none;">
+                            <!-- Dropzone -->
+                            <div class="dropzone" id="dropzone">
+                                <div class="dropzone-icon">📥</div>
+                                <div class="dropzone-title" id="dropzoneTitle">Kéo thả tệp hoặc thư mục vào đây để mã hóa</div>
+                                <div class="dropzone-subtitle">Hỗ trợ mọi định dạng: Văn bản, Ảnh, Video, File nhị phân lớn</div>
+                                <div class="dropzone-actions">
+                                    <label class="btn btn-outline" for="fileInput">
+                                        📄 Chọn tệp
+                                        <input type="file" id="fileInput" style="display: none;">
+                                    </label>
+                                    <label class="btn btn-outline" for="folderInput">
+                                        📁 Chọn thư mục
+                                        <input type="file" id="folderInput" webkitdirectory directory style="display: none;">
+                                    </label>
+                                </div>
+                            </div>
+
+                            <!-- Selected File Meta Card -->
+                            <div class="file-info-card" id="fileInfoCard">
+                                <div class="file-info-meta">
+                                    <div class="file-icon">📦</div>
+                                    <div class="file-details">
+                                        <h4 id="selectedFileName">filename.ext</h4>
+                                        <span id="selectedFileSize">0 KB</span> • <span id="selectedFileType">text/plain</span>
+                                    </div>
+                                </div>
+                                <button class="btn-icon-danger" id="removeFileBtn" title="Hủy chọn tệp">✕</button>
+                            </div>
+                        </div>
+
+                        <!-- Security Configuration -->
                         <div class="form-group" id="algoGroup">
                             <label class="form-label" for="algorithmSelect">Thuật toán mã hóa:</label>
                             <select id="algorithmSelect" class="form-select">
-                                <option value="2" selected>AES-256-GCM (Khuyến nghị — AEAD, Tăng tốc phần cứng)</option>
-                                <option value="3">ChaCha20-Poly1305 (AEAD chuẩn RFC 8439, tối ưu CPU di động)</option>
-                                <option value="1">AES-256-CBC + HMAC-SHA256 (Mô hình Encrypt-then-MAC)</option>
+                                <option value="1" selected>AES-256-CBC (OpenSSL CLI tương thích)</option>
+                                <option value="2">AES-256-GCM (Khuyến nghị — AEAD, Tăng tốc phần cứng)</option>
+                                <option value="3">ChaCha20-Poly1305 (RFC 8439 — AEAD Tối ưu CPU di động)</option>
                             </select>
                         </div>
 
@@ -91,7 +120,7 @@
                         <div class="form-group" id="passGroup">
                             <label class="form-label" for="passwordInput">Mật khẩu bảo vệ / mở khóa:</label>
                             <div class="input-password-wrapper">
-                                <input type="password" id="passwordInput" class="form-input" placeholder="Nhập mật khẩu an toàn...">
+                                <input type="password" id="passwordInput" class="form-input" value="MatKhauLab2026" placeholder="Nhập mật khẩu an toàn...">
                                 <div class="pass-actions">
                                     <button type="button" class="btn-pass-action" id="togglePassBtn" title="Hiện/Ẩn mật khẩu">👁️</button>
                                     <button type="button" class="btn-pass-action" id="generatePassBtn" title="Tạo mật khẩu ngẫu nhiên">🎲</button>
@@ -105,13 +134,25 @@
                             </div>
                         </div>
 
+                        <!-- Base64 Checkbox -->
+                        <div class="form-group" id="base64Group">
+                            <label class="form-checkbox-label" for="base64Check">
+                                <input type="checkbox" id="base64Check" checked>
+                                <span>Mã hóa Base64 (Tương đương cờ -a trong OpenSSL CLI)</span>
+                            </label>
+                        </div>
+
+                        <p id="algorithmInfo" style="font-size: 12px; color: var(--text-secondary); margin-bottom: 16px;">
+                            AES-256-CBC • Chuẩn bài giảng OpenSSL • PBKDF2
+                        </p>
+
                         <!-- Action Button -->
-                        <button id="actionBtn" class="btn btn-primary">🔒 Bắt đầu mã hóa tệp</button>
+                        <button id="actionBtn" class="btn btn-primary">🔒 BẮT ĐẦU MÃ HÓA</button>
 
                         <!-- Progress Bar -->
-                        <div class="progress-section" id="progressSection">
+                        <div class="progress-section" id="progressSection" style="margin-top: 14px;">
                             <div class="progress-header">
-                                <span id="progressStatus">Đang xử lý...</span>
+                                <span id="progressStatus">Sẵn sàng • Nhập văn bản hoặc chọn tệp để bắt đầu</span>
                                 <span id="progressPercent">0%</span>
                             </div>
                             <div class="progress-track">
@@ -119,43 +160,202 @@
                             </div>
                         </div>
 
-                        <!-- Result Section -->
+                        <!-- File Result Section -->
                         <div class="result-section" id="resultSection">
                             <div id="resultDetails"></div>
                             <button id="downloadBtn" class="btn btn-success">💾 Tải tệp kết quả xuống</button>
                         </div>
-
-                        <!-- Inspect Result Card -->
-                        <div class="inspect-card" id="inspectResultCard" style="display: none; margin-top: 16px;">
-                            <h3 class="card-title">🔬 Phân tích chi tiết Header FCQ</h3>
-                            <div id="inspectContent"></div>
-                        </div>
                     </div>
 
-                    <!-- Right Column: Live Preview & Inspection -->
+                    <!-- Right Column: Live Work Area & Output -->
                     <div class="glass-card">
-                        <h2 class="card-title">👁️ Xem trước nội dung (File Preview)</h2>
-                        <div class="preview-container" id="previewContainer">
-                            <div class="preview-empty">Chọn hoặc kéo thả tệp để xem trước văn bản, hình ảnh, media hoặc bảng HEX</div>
+                        <!-- Transmission Simulator -->
+                        <div class="transmission-card" style="margin-bottom: 16px;">
+                            <h2 class="card-title">📡 Mô phỏng luồng truyền tải dữ liệu (Transmission Simulator)</h2>
+                            <div class="canvas-wrapper">
+                                <canvas id="transmissionCanvas"></canvas>
+                            </div>
                         </div>
-                    </div>
 
-                    <!-- Full Width: Transmission Simulator -->
-                    <div class="glass-card transmission-card">
-                        <h2 class="card-title">📡 Mô phỏng luồng truyền tải dữ liệu (Transmission Simulator)</h2>
-                        <div class="canvas-wrapper">
-                            <canvas id="transmissionCanvas"></canvas>
+                        <!-- Dual Output Section (Text Mode) -->
+                        <div id="textOutputWrapper">
+                            <!-- Encrypt Output: Dual Side-by-Side (Hex & Base64) -->
+                            <div id="encryptDualOutput" class="dual-output-grid">
+                                <div class="output-card">
+                                    <div class="output-header">
+                                        <h4>MÃ HEX (DỮ LIỆU NHỊ PHÂN)</h4>
+                                        <button type="button" class="btn-sm-copy" id="copyHexBtn">Sao chép HEX</button>
+                                    </div>
+                                    <textarea id="hexOutputEdit" class="output-textarea" readonly placeholder="Dữ liệu nhị phân sau khi mã hóa sẽ hiển thị dưới dạng mã Hex..."></textarea>
+                                </div>
+                                <div class="output-card">
+                                    <div class="output-header">
+                                        <h4>CHUỖI BASE64 (CỜ -a)</h4>
+                                        <button type="button" class="btn-sm-copy" id="copyBase64Btn">Sao chép Base64</button>
+                                    </div>
+                                    <textarea id="base64OutputEdit" class="output-textarea" readonly placeholder="Dữ liệu Base64 an toàn để truyền qua văn bản (ASCII armor - cờ -a)..."></textarea>
+                                </div>
+                            </div>
+
+                            <!-- Decrypt Output: Single Plaintext Recovery -->
+                            <div id="decryptSingleOutput" class="output-card" style="display: none; margin-top: 16px;">
+                                <div class="output-header">
+                                    <h4>VĂN BẢN ĐÃ GIẢI MÃ (PLAINTEXT PHỤC HỒI)</h4>
+                                    <button type="button" class="btn-sm-copy" id="copyPlainBtn">Sao chép Văn bản</button>
+                                </div>
+                                <textarea id="plainOutputEdit" class="output-textarea" readonly style="min-height: 200px;" placeholder="Văn bản gốc sau khi giải mã sẽ hiển thị tại đây..."></textarea>
+                            </div>
+                        </div>
+
+                        <!-- File Preview Section (File Mode) -->
+                        <div id="filePreviewWrapper" style="display: none;">
+                            <h2 class="card-title">👁️ Xem trước nội dung (File Preview)</h2>
+                            <div class="preview-container" id="previewContainer">
+                                <div class="preview-empty">Chọn hoặc kéo thả tệp để xem trước văn bản, hình ảnh, media hoặc bảng HEX</div>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <!-- Tab Pane: Documentation & Self-Test -->
+            <!-- TAB 2: Tạo Yêu cầu CSR & Cặp Khóa (PKI / X.509) -->
+            <div id="csrPane" class="tab-pane" style="display: none;">
+                <div class="main-grid">
+                    <!-- Left Column: Subject DN & Key Config -->
+                    <div class="glass-card">
+                        <h2 class="card-title">📋 Cấu hình Chủ thể &amp; Cặp khóa (PKI)</h2>
+
+                        <label class="form-label" style="color: var(--accent-cyan); font-weight: 600; margin-bottom: 10px;">THÔNG TIN CHỦ THỂ (X.509 SUBJECT DN)</label>
+                        <div class="csr-form-grid">
+                            <div>
+                                <label class="form-label" for="csrCnInput">Common Name (CN)*</label>
+                                <input type="text" id="csrCnInput" class="form-input" value="cryptolab.local" placeholder="example.com hoặc sinhvien.edu.vn">
+                            </div>
+                            <div>
+                                <label class="form-label" for="csrOInput">Organization (O)</label>
+                                <input type="text" id="csrOInput" class="form-input" value="CryptoLab Security Academy" placeholder="Tên công ty hoặc Trường ĐH">
+                            </div>
+                            <div>
+                                <label class="form-label" for="csrOuInput">Department (OU)</label>
+                                <input type="text" id="csrOuInput" class="form-input" value="Cyber Security Lab" placeholder="Khoa CNTT / An Toàn Thông Tin">
+                            </div>
+                            <div>
+                                <label class="form-label" for="csrCInput">Country (C)</label>
+                                <input type="text" id="csrCInput" class="form-input" value="VN" maxlength="2" placeholder="Mã 2 ký tự (VN, US...)">
+                            </div>
+                            <div>
+                                <label class="form-label" for="csrStInput">State / Province (ST)</label>
+                                <input type="text" id="csrStInput" class="form-input" value="Ha Noi" placeholder="Tỉnh / Thành phố">
+                            </div>
+                            <div>
+                                <label class="form-label" for="csrLInput">Locality / City (L)</label>
+                                <input type="text" id="csrLInput" class="form-input" value="Cau Giay" placeholder="Quận / Huyện">
+                            </div>
+                            <div class="full-width">
+                                <label class="form-label" for="csrEmailInput">Email Address</label>
+                                <input type="email" id="csrEmailInput" class="form-input" value="security@cryptolab.local" placeholder="admin@cryptolab.local">
+                            </div>
+                        </div>
+
+                        <label class="form-label" style="color: var(--accent-cyan); font-weight: 600; margin-top: 14px; margin-bottom: 10px;">CẤU HÌNH CẶP KHÓA &amp; BĂM KÝ SỐ</label>
+                        <div class="csr-form-grid">
+                            <div>
+                                <label class="form-label" for="csrKeyTypeSelect">Loại cặp khóa:</label>
+                                <select id="csrKeyTypeSelect" class="form-select">
+                                    <option value="2048" selected>RSA 2048-bit (Tiêu chuẩn khuyến nghị)</option>
+                                    <option value="3072">RSA 3072-bit (Bảo mật nâng cao)</option>
+                                    <option value="4096">RSA 4096-bit (Bảo mật quân sự)</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="form-label" for="csrDigestSelect">Hàm băm ký số:</label>
+                                <select id="csrDigestSelect" class="form-select">
+                                    <option value="SHA-256" selected>SHA-256 (Khuyến nghị)</option>
+                                    <option value="SHA-384">SHA-384</option>
+                                    <option value="SHA-512">SHA-512</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Action Button -->
+                        <button id="csrGenerateBtn" class="btn btn-primary" style="margin-top: 10px;">🔑 SINH CẶP KHÓA &amp; TẠO CSR</button>
+
+                        <!-- Save Actions -->
+                        <div style="display: flex; gap: 10px; margin-top: 12px;">
+                            <button type="button" class="btn btn-outline" id="csrSaveKeyBtn" disabled>💾 Lưu Khóa (.key)</button>
+                            <button type="button" class="btn btn-outline" id="csrSaveCsrBtn" disabled>💾 Lưu CSR (.csr)</button>
+                        </div>
+
+                        <!-- Status Badge -->
+                        <div class="status-badge" id="csrStatusBadge">
+                            <span>Sẵn sàng • Nhấn nút để sinh khóa và tạo yêu cầu CSR</span>
+                        </div>
+                    </div>
+
+                    <!-- Right Column: Dual PEM Output & ASN.1 Details -->
+                    <div class="glass-card">
+                        <h2 class="card-title">📜 Kết quả Cặp khóa &amp; Chứng chỉ CSR</h2>
+
+                        <!-- Dual PEM Splitter (Key & CSR) -->
+                        <div class="dual-output-grid" style="margin-top: 0; margin-bottom: 16px;">
+                            <div class="output-card">
+                                <div class="output-header">
+                                    <h4>KHÓA RIÊNG TƯ (PRIVATE KEY — PEM)</h4>
+                                    <button type="button" class="btn-sm-copy" id="copyCsrKeyBtn">Sao chép Khóa</button>
+                                </div>
+                                <textarea id="csrKeyEdit" class="output-textarea" readonly placeholder="Khóa bí mật (Private Key) được sinh ngẫu nhiên an toàn bằng Web Crypto API..."></textarea>
+                            </div>
+                            <div class="output-card">
+                                <div class="output-header">
+                                    <h4>YÊU CẦU CHỨNG CHỈ (CSR — PEM)</h4>
+                                    <button type="button" class="btn-sm-copy" id="copyCsrBtn">Sao chép CSR</button>
+                                </div>
+                                <textarea id="csrOutputEdit" class="output-textarea" readonly placeholder="Chứng chỉ yêu cầu CSR (Certificate Signing Request) sẵn sàng gửi đến CA..."></textarea>
+                            </div>
+                        </div>
+
+                        <!-- ASN.1 Parser Details Card -->
+                        <div class="output-card">
+                            <div class="output-header">
+                                <h4>🔬 CHI TIẾT PHÂN TÍCH CẤU TRÚC X.509 CSR (ASN.1 PARSER)</h4>
+                            </div>
+                            <textarea id="csrDetailsEdit" class="output-textarea" readonly style="min-height: 140px;" placeholder="Thông tin giải mã cấu trúc ASN.1/X.509 của CSR sau khi sinh..."></textarea>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB 3: Soi Header FCQ -->
+            <div id="inspectPane" class="tab-pane" style="display: none;">
+                <div class="glass-card">
+                    <h2 class="card-title">🔍 Soi Header &amp; Metadata tệp mã hóa FCQ</h2>
+                    <p style="color: var(--text-secondary); font-size: 13px; margin-bottom: 16px;">
+                        Kéo thả hoặc chọn một tệp <code>.fcq</code> để phân tích cấu trúc nhị phân header (Magic FCQ2/FCQ1, Thuật toán, Salt dẫn xuất, Nonce/IV, Tên gốc và Loại MIME).
+                    </p>
+                    <div class="dropzone" id="inspectDropzone">
+                        <div class="dropzone-icon">🔬</div>
+                        <div class="dropzone-title">Kéo thả tệp .fcq vào đây để soi cấu trúc header</div>
+                        <div class="dropzone-subtitle">Phân tích nhị phân hoàn toàn an toàn ngay trên trình duyệt</div>
+                        <div class="dropzone-actions">
+                            <label class="btn btn-outline" for="inspectFileInput">
+                                📄 Chọn tệp .fcq
+                                <input type="file" id="inspectFileInput" accept=".fcq" style="display: none;">
+                            </label>
+                        </div>
+                    </div>
+                    <div id="inspectResultWrapper" style="display: none; margin-top: 16px;">
+                        <h3 class="card-title" style="color: var(--accent-cyan);">🔬 Cấu trúc Header đã giải mã:</h3>
+                        <div id="inspectContent" style="background: rgba(0,0,0,0.5); padding: 16px; border-radius: 8px; font-family: var(--font-mono); font-size: 13px;"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB 4: Thuật toán & Tự kiểm thử -->
             <div id="docsPane" class="tab-pane" style="display: none;">
                 <div class="glass-card" style="margin-bottom: 24px;">
                     <h2 class="card-title">⚡ Bộ tự kiểm thử trực tiếp trên trình duyệt (Self-Test Suite)</h2>
                     <p style="color: var(--text-secondary); font-size: 13px; margin-bottom: 16px;">
-                        Chạy kiểm tra tự động toàn bộ 3 thuật toán (AES-256-GCM, ChaCha20-Poly1305, AES-256-CBC+HMAC) bằng Web Crypto API và Pure JS RFC 8439, bao gồm kiểm tra bẫy can thiệp dữ liệu (Tamper Resistance).
+                        Chạy kiểm tra tự động toàn diện: OpenSSL AES-256-CBC Salted__ text mode, AES-256-GCM, ChaCha20-Poly1305, tệp FCQ2, và sinh cặp khóa RSA 2048 kèm CSR X.509 PKCS#10 với tự kiểm tra chữ ký số.
                     </p>
                     <button id="runSelfTestBtn" class="btn btn-info" style="width: auto;">🚀 Bắt đầu chạy Self-Test</button>
                     <div id="selfTestResults" style="margin-top: 16px;"></div>
@@ -190,6 +390,7 @@
 
     <!-- Scripts -->
     <script src="js/crypto-engine.js"></script>
+    <script src="js/csr-engine.js"></script>
     <script src="js/preview.js"></script>
     <script src="js/transmission.js"></script>
     <script src="js/app.js"></script>
