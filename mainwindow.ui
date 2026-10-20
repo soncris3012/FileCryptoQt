@@ -587,29 +587,6 @@
             </widget>
            </item>
            <item>
-            <widget class="QGroupBox" name="cliGroup">
-             <property name="title">
-              <string>LỆNH OPENSSL CLI TƯƠNG ĐƯƠNG (BÀI HỌC THỰC HÀNH)</string>
-             </property>
-             <layout class="QHBoxLayout" name="cliLayout">
-              <item>
-               <widget class="QLineEdit" name="cliCommandEdit">
-                <property name="readOnly">
-                 <bool>true</bool>
-                </property>
-               </widget>
-              </item>
-              <item>
-               <widget class="QPushButton" name="copyCliButton">
-                <property name="text">
-                 <string>📋 Sao chép lệnh CLI</string>
-                </property>
-               </widget>
-              </item>
-             </layout>
-            </widget>
-           </item>
-           <item>
             <widget class="QGroupBox" name="detailGroup">
              <property name="title">
               <string>NHẬT KÝ VÀ TÁC DỤNG THUẬT TOÁN (OPENSSL EVP API)</string>
@@ -1023,29 +1000,6 @@
                </item>
               </layout>
              </widget>
-            </widget>
-           </item>
-           <item>
-            <widget class="QGroupBox" name="csrCliGroup">
-             <property name="title">
-              <string>LỆNH OPENSSL CLI TƯƠNG ĐƯƠNG</string>
-             </property>
-             <layout class="QHBoxLayout" name="csrCliLayout">
-              <item>
-               <widget class="QLineEdit" name="csrCliEdit">
-                <property name="readOnly">
-                 <bool>true</bool>
-                </property>
-               </widget>
-              </item>
-              <item>
-               <widget class="QPushButton" name="copyCsrCliButton">
-                <property name="text">
-                 <string>📋 Sao chép lệnh CLI</string>
-                </property>
-               </widget>
-              </item>
-             </layout>
             </widget>
            </item>
            <item>
