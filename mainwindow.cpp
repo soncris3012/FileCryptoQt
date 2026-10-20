@@ -87,13 +87,10 @@ MainWindow::MainWindow(QWidget* parent)
     connect(ui->folderButton, &QPushButton::clicked, this, &MainWindow::chooseFolderInput);
     connect(ui->outputButton, &QPushButton::clicked, this, &MainWindow::chooseOutput);
     connect(ui->inputEdit, &QLineEdit::textChanged, this, &MainWindow::updateInput);
-    connect(ui->textInputEdit, &QPlainTextEdit::textChanged, this, &MainWindow::updateCliPreview);
     connect(ui->algorithmBox, &QComboBox::currentIndexChanged, this, &MainWindow::updateAlgorithm);
-    connect(ui->base64Check, &QCheckBox::toggled, this, &MainWindow::updateCliPreview);
     connect(ui->runButton, &QPushButton::clicked, this, &MainWindow::run);
     connect(ui->copyHexButton, &QPushButton::clicked, this, &MainWindow::copyHex);
     connect(ui->copyBase64Button, &QPushButton::clicked, this, &MainWindow::copyBase64);
-    connect(ui->copyCliButton, &QPushButton::clicked, this, &MainWindow::copyCliCommand);
     connect(ui->openResultButton, &QPushButton::clicked, this, &MainWindow::openResult);
     connect(ui->openFolderButton, &QPushButton::clicked, this, &MainWindow::openFolder);
     connect(m_watcher, &QFutureWatcher<QVariantMap>::finished, this, &MainWindow::operationFinished);
@@ -104,17 +101,6 @@ MainWindow::MainWindow(QWidget* parent)
     connect(ui->csrSaveCsrButton, &QPushButton::clicked, this, &MainWindow::saveCsr);
     connect(ui->copyKeyButton, &QPushButton::clicked, this, &MainWindow::copyPrivateKey);
     connect(ui->copyCsrButton, &QPushButton::clicked, this, &MainWindow::copyCsr);
-    connect(ui->copyCsrCliButton, &QPushButton::clicked, this, &MainWindow::copyCsrCli);
-
-    connect(ui->csrCnEdit, &QLineEdit::textChanged, this, &MainWindow::updateCsrCliPreview);
-    connect(ui->csrOEdit, &QLineEdit::textChanged, this, &MainWindow::updateCsrCliPreview);
-    connect(ui->csrOuEdit, &QLineEdit::textChanged, this, &MainWindow::updateCsrCliPreview);
-    connect(ui->csrCEdit, &QLineEdit::textChanged, this, &MainWindow::updateCsrCliPreview);
-    connect(ui->csrStEdit, &QLineEdit::textChanged, this, &MainWindow::updateCsrCliPreview);
-    connect(ui->csrLEdit, &QLineEdit::textChanged, this, &MainWindow::updateCsrCliPreview);
-    connect(ui->csrEmailEdit, &QLineEdit::textChanged, this, &MainWindow::updateCsrCliPreview);
-    connect(ui->csrKeyTypeCombo, &QComboBox::currentIndexChanged, this, &MainWindow::updateCsrCliPreview);
-    connect(ui->csrDigestCombo, &QComboBox::currentIndexChanged, this, &MainWindow::updateCsrCliPreview);
 
     // Loading Animation Timer
     connect(m_loadingTimer, &QTimer::timeout, this, [this] {
@@ -128,7 +114,6 @@ MainWindow::MainWindow(QWidget* parent)
     updateInputType();
     updateAlgorithm();
     updateMode();
-    updateCsrCliPreview();
 }
 
 MainWindow::~MainWindow() {
@@ -167,7 +152,6 @@ void MainWindow::chooseOutput() {
         : QFileDialog::getSaveFileName(this, "Chọn tệp kết quả", ui->outputEdit->text());
     if (!p.isEmpty()) {
         ui->outputEdit->setText(p);
-        updateCliPreview();
     }
 }
 
@@ -181,7 +165,6 @@ void MainWindow::updateInputType() {
     ui->inputStack->setCurrentIndex(m_textMode ? 0 : 1);
     ui->outputStack->setCurrentIndex(m_textMode ? 0 : 1);
     ui->fileActionWidget->setVisible(!m_textMode);
-    updateCliPreview();
 }
 
 void MainWindow::updateInput() {
@@ -191,7 +174,6 @@ void MainWindow::updateInput() {
         m_folderMode = false;
         ui->fileInfoLabel->setText("Chưa chọn tệp hoặc thư mục");
         ui->sourcePreview->clearPreview();
-        updateCliPreview();
         return;
     }
     m_folderMode = f.isDir();
@@ -209,7 +191,6 @@ void MainWindow::updateInput() {
         ui->sourcePreview->clearPreview(QString("THƯ MỤC NGUỒN\n\n%1 tệp sẽ được xử lý đệ quy\nGiữ nguyên cấu trúc thư mục con").arg(files));
         QString suffix = m_decrypting ? "_decrypted" : "_encrypted";
         ui->outputEdit->setText(QDir(f.absolutePath()).filePath(f.fileName() + suffix));
-        updateCliPreview();
         return;
     }
 
@@ -230,7 +211,6 @@ void MainWindow::updateInput() {
         }
     }
     ui->outputEdit->setText(m_decrypting ? CryptoEngine::suggestedDecryptedPath(p) : CryptoEngine::suggestedEncryptedPath(p));
-    updateCliPreview();
 }
 
 void MainWindow::updateMode() {
@@ -257,7 +237,6 @@ void MainWindow::updateMode() {
         }
     }
     updateAlgorithm();
-    updateCliPreview();
 }
 
 QString MainWindow::algorithmExplanation() const {
@@ -280,16 +259,8 @@ void MainWindow::updateAlgorithm() {
     if (!m_decrypting) {
         ui->detailText->setPlainText(algorithmExplanation() + "\n\nKhóa và IV được dẫn xuất bằng hàm băm mật khẩu PBKDF2-HMAC-SHA256 kết hợp Salt ngẫu nhiên.");
     }
-    updateCliPreview();
 }
 
-void MainWindow::updateCliPreview() {
-    auto alg = CryptoEngine::Algorithm(ui->algorithmBox->currentData().toInt());
-    bool b64 = ui->base64Check->isChecked();
-    QString in = m_textMode ? ui->textInputEdit->toPlainText() : ui->inputEdit->text();
-    QString out = m_textMode ? "" : ui->outputEdit->text();
-    ui->cliCommandEdit->setText(CryptoEngine::generateCliCommand(m_decrypting, in, out, alg, b64, m_textMode));
-}
 
 void MainWindow::setBusy(bool b) {
     ui->runButton->setDisabled(b);
@@ -511,10 +482,6 @@ void MainWindow::copyBase64() {
     ui->statusLabel->setText("✓ Đã sao chép chuỗi Base64 vào bộ nhớ tạm!");
 }
 
-void MainWindow::copyCliCommand() {
-    QGuiApplication::clipboard()->setText(ui->cliCommandEdit->text());
-    ui->statusLabel->setText("✓ Đã sao chép lệnh OpenSSL CLI vào bộ nhớ tạm!");
-}
 
 // -------------------------------------------------------------
 // TAB 2: TẠO CSR & CẶP KHÓA
@@ -583,23 +550,4 @@ void MainWindow::copyCsr() {
     ui->csrStatusLabel->setText("✓ Đã sao chép CSR vào bộ nhớ tạm!");
 }
 
-void MainWindow::copyCsrCli() {
-    QGuiApplication::clipboard()->setText(ui->csrCliEdit->text());
-    ui->csrStatusLabel->setText("✓ Đã sao chép lệnh OpenSSL CLI tạo CSR!");
-}
 
-void MainWindow::updateCsrCliPreview() {
-    CsrEngine::SubjectInfo subj;
-    subj.commonName = ui->csrCnEdit->text();
-    subj.organization = ui->csrOEdit->text();
-    subj.organizationalUnit = ui->csrOuEdit->text();
-    subj.country = ui->csrCEdit->text();
-    subj.state = ui->csrStEdit->text();
-    subj.locality = ui->csrLEdit->text();
-    subj.email = ui->csrEmailEdit->text();
-
-    auto keyType = CsrEngine::KeyType(ui->csrKeyTypeCombo->currentData().toInt());
-    auto digest = CsrEngine::DigestType(ui->csrDigestCombo->currentData().toInt());
-
-    ui->csrCliEdit->setText(CsrEngine::generateCliCommand(subj, keyType, digest));
-}
