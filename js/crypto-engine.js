@@ -618,6 +618,346 @@
         };
     }
 
+    function bytesToHex(bytes) {
+        if (!bytes) return '';
+        const hex = [];
+        for (let i = 0; i < bytes.length; i++) {
+            hex.push(bytes[i].toString(16).padStart(2, '0').toUpperCase());
+        }
+        return hex.join(' ');
+    }
+
+    function hexToBytes(hex) {
+        if (!hex) return new Uint8Array(0);
+        const clean = hex.replace(/[^0-9a-fA-F]/g, '');
+        const bytes = new Uint8Array(Math.floor(clean.length / 2));
+        for (let i = 0; i < clean.length - 1; i += 2) {
+            bytes[i / 2] = parseInt(clean.substring(i, i + 2), 16);
+        }
+        return bytes;
+    }
+
+    function bytesToBase64(bytes) {
+        if (!bytes) return '';
+        let binary = '';
+        for (let i = 0; i < bytes.byteLength; i++) {
+            binary += String.fromCharCode(bytes[i]);
+        }
+        if (typeof btoa !== 'undefined') {
+            return btoa(binary);
+        }
+        return Buffer.from(bytes).toString('base64');
+    }
+
+    function base64ToBytes(b64) {
+        if (!b64) return new Uint8Array(0);
+        const clean = b64.replace(/\s+/g, '');
+        if (typeof atob !== 'undefined') {
+            const binary = atob(clean);
+            const bytes = new Uint8Array(binary.length);
+            for (let i = 0; i < binary.length; i++) {
+                bytes[i] = binary.charCodeAt(i);
+            }
+            return bytes;
+        }
+        return new Uint8Array(Buffer.from(clean, 'base64'));
+    }
+
+    async function derivePbkdf2Bytes(password, salt, length, iterations) {
+        const passBytes = new TextEncoder().encode(password);
+        if (isBrowser) {
+            const baseKey = await window.crypto.subtle.importKey(
+                "raw",
+                passBytes,
+                { name: "PBKDF2" },
+                false,
+                ["deriveBits"]
+            );
+            const bits = await window.crypto.subtle.deriveBits(
+                {
+                    name: "PBKDF2",
+                    salt: salt,
+                    iterations: iterations,
+                    hash: "SHA-256"
+                },
+                baseKey,
+                length * 8
+            );
+            return new Uint8Array(bits);
+        } else if (nodeCrypto) {
+            return new Promise((resolve, reject) => {
+                nodeCrypto.pbkdf2(
+                    Buffer.from(passBytes),
+                    Buffer.from(salt),
+                    iterations,
+                    length,
+                    'sha256',
+                    (err, key) => {
+                        if (err) reject(err);
+                        else resolve(new Uint8Array(key));
+                    }
+                );
+            });
+        }
+        throw new Error("Không hỗ trợ CSPRNG/WebCrypto.");
+    }
+
+    async function encryptText(plainText, password, alg = Algorithm.Aes256Cbc, useBase64 = true) {
+        if (!password) {
+            return { ok: false, error: "Vui lòng nhập mật khẩu mã hóa." };
+        }
+        if (!plainText) {
+            return { ok: false, error: "Văn bản đầu vào trống." };
+        }
+
+        const plainBytes = new TextEncoder().encode(plainText);
+
+        try {
+            if (alg === Algorithm.Aes256Cbc) {
+                // OpenSSL CLI compatible mode: Salted__ + 8 bytes salt + 10,000 PBKDF2 iterations
+                const salt = getRandomBytes(8);
+                const kiv = await derivePbkdf2Bytes(password, salt, 48, 10000);
+                const keyBytes = kiv.subarray(0, 32);
+                const ivBytes = kiv.subarray(32, 48);
+
+                let encryptedBytes;
+                if (isBrowser) {
+                    const aesKey = await window.crypto.subtle.importKey(
+                        "raw",
+                        keyBytes,
+                        { name: "AES-CBC" },
+                        false,
+                        ["encrypt"]
+                    );
+                    const encBuf = await window.crypto.subtle.encrypt(
+                        { name: "AES-CBC", iv: ivBytes },
+                        aesKey,
+                        plainBytes
+                    );
+                    encryptedBytes = new Uint8Array(encBuf);
+                } else if (nodeCrypto) {
+                    const cipher = nodeCrypto.createCipheriv('aes-256-cbc', Buffer.from(keyBytes), Buffer.from(ivBytes));
+                    encryptedBytes = new Uint8Array(Buffer.concat([cipher.update(Buffer.from(plainBytes)), cipher.final()]));
+                }
+
+                const magic = new TextEncoder().encode("Salted__");
+                const container = new Uint8Array(magic.length + salt.length + encryptedBytes.length);
+                container.set(magic, 0);
+                container.set(salt, magic.length);
+                container.set(encryptedBytes, magic.length + salt.length);
+
+                return {
+                    ok: true,
+                    rawCipher: container,
+                    hexString: bytesToHex(container),
+                    base64String: bytesToBase64(container)
+                };
+            } else if (alg === Algorithm.Aes256Gcm) {
+                const salt = getRandomBytes(16);
+                const iv = getRandomBytes(12);
+                const key = await deriveKeyBytes(password, salt, 32);
+
+                let encryptedBytes;
+                if (isBrowser) {
+                    const aesKey = await window.crypto.subtle.importKey(
+                        "raw",
+                        key,
+                        { name: "AES-GCM" },
+                        false,
+                        ["encrypt"]
+                    );
+                    const encBuf = await window.crypto.subtle.encrypt(
+                        { name: "AES-GCM", iv: iv, tagLength: 128 },
+                        aesKey,
+                        plainBytes
+                    );
+                    encryptedBytes = new Uint8Array(encBuf);
+                } else if (nodeCrypto) {
+                    const cipher = nodeCrypto.createCipheriv('aes-256-gcm', Buffer.from(key), Buffer.from(iv));
+                    const part1 = cipher.update(Buffer.from(plainBytes));
+                    const part2 = cipher.final();
+                    const tag = cipher.getAuthTag();
+                    encryptedBytes = new Uint8Array(Buffer.concat([part1, part2, tag]));
+                }
+
+                const tag = encryptedBytes.subarray(encryptedBytes.length - 16);
+                const cipher = encryptedBytes.subarray(0, encryptedBytes.length - 16);
+
+                const magic = new TextEncoder().encode("FCQGCM");
+                const container = new Uint8Array(magic.length + salt.length + iv.length + tag.length + cipher.length);
+                let offset = 0;
+                container.set(magic, offset); offset += magic.length;
+                container.set(salt, offset); offset += salt.length;
+                container.set(iv, offset); offset += iv.length;
+                container.set(tag, offset); offset += tag.length;
+                container.set(cipher, offset);
+
+                return {
+                    ok: true,
+                    rawCipher: container,
+                    hexString: bytesToHex(container),
+                    base64String: bytesToBase64(container)
+                };
+            } else {
+                // ChaCha20-Poly1305
+                const salt = getRandomBytes(16);
+                const iv = getRandomBytes(12);
+                const key = await deriveKeyBytes(password, salt, 32);
+                const res = ChaCha20Poly1305.encrypt(key, iv, plainBytes, new Uint8Array(0));
+
+                const magic = new TextEncoder().encode("FCQCHA");
+                const container = new Uint8Array(magic.length + salt.length + iv.length + res.tag.length + res.ciphertext.length);
+                let offset = 0;
+                container.set(magic, offset); offset += magic.length;
+                container.set(salt, offset); offset += salt.length;
+                container.set(iv, offset); offset += iv.length;
+                container.set(res.tag, offset); offset += res.tag.length;
+                container.set(res.ciphertext, offset);
+
+                return {
+                    ok: true,
+                    rawCipher: container,
+                    hexString: bytesToHex(container),
+                    base64String: bytesToBase64(container)
+                };
+            }
+        } catch (e) {
+            return { ok: false, error: "Mã hóa văn bản thất bại: " + (e.message || e.toString()) };
+        }
+    }
+
+    async function decryptText(cipherInput, password) {
+        if (!password) {
+            throw new Error("Vui lòng nhập mật khẩu giải mã.");
+        }
+        if (!cipherInput || !cipherInput.trim()) {
+            throw new Error("Dữ liệu bản mã trống.");
+        }
+
+        const trimmed = cipherInput.trim();
+        const noSpaces = trimmed.replace(/\s+/g, '');
+
+        let raw = null;
+        try {
+            const b64Candidate = base64ToBytes(noSpaces);
+            const strCheck = new TextDecoder().decode(b64Candidate.subarray(0, 8));
+            if (strCheck.startsWith("Salted__") || strCheck.startsWith("FCQ")) {
+                raw = b64Candidate;
+            }
+        } catch (e) { }
+
+        if (!raw) {
+            try {
+                const hexCandidate = hexToBytes(noSpaces);
+                const strCheck = new TextDecoder().decode(hexCandidate.subarray(0, 8));
+                if (strCheck.startsWith("Salted__") || strCheck.startsWith("FCQ")) {
+                    raw = hexCandidate;
+                } else if (hexCandidate.length >= 16) {
+                    raw = hexCandidate;
+                }
+            } catch (e) { }
+        }
+
+        if (!raw) {
+            raw = base64ToBytes(noSpaces);
+        }
+
+        if (raw.length < 16) {
+            throw new Error("Bản mã không đủ độ dài hợp lệ.");
+        }
+
+        const magic = new TextDecoder().decode(raw.subarray(0, 8));
+        if (magic.startsWith("Salted__")) {
+            const salt = raw.subarray(8, 16);
+            const cipher = raw.subarray(16);
+
+            const itersList = [10000, 200000];
+            for (const iters of itersList) {
+                try {
+                    const kiv = await derivePbkdf2Bytes(password, salt, 48, iters);
+                    const keyBytes = kiv.subarray(0, 32);
+                    const ivBytes = kiv.subarray(32, 48);
+
+                    if (isBrowser) {
+                        const aesKey = await window.crypto.subtle.importKey(
+                            "raw",
+                            keyBytes,
+                            { name: "AES-CBC" },
+                            false,
+                            ["decrypt"]
+                        );
+                        const decBuf = await window.crypto.subtle.decrypt(
+                            { name: "AES-CBC", iv: ivBytes },
+                            aesKey,
+                            cipher
+                        );
+                        return new TextDecoder().decode(decBuf);
+                    } else if (nodeCrypto) {
+                        const decipher = nodeCrypto.createDecipheriv('aes-256-cbc', Buffer.from(keyBytes), Buffer.from(ivBytes));
+                        const decBuf = Buffer.concat([decipher.update(Buffer.from(cipher)), decipher.final()]);
+                        return decBuf.toString('utf8');
+                    }
+                } catch (e) {
+                    // Tiếp tục thử số vòng lặp tiếp theo
+                }
+            }
+            throw new Error("Sai mật khẩu hoặc dữ liệu bản mã đã bị thay đổi.");
+        } else if (magic.startsWith("FCQGCM") || magic.startsWith("FCQCHA")) {
+            const isGcm = magic.startsWith("FCQGCM");
+            if (raw.length < 6 + 16 + 12 + TAG_SIZE) {
+                throw new Error("Bản mã AEAD bị thiếu dữ liệu.");
+            }
+
+            const salt = raw.subarray(6, 22);
+            const iv = raw.subarray(22, 34);
+            const tag = raw.subarray(34, 34 + TAG_SIZE);
+            const cipher = raw.subarray(34 + TAG_SIZE);
+
+            const key = await deriveKeyBytes(password, salt, 32);
+
+            if (isGcm) {
+                const combined = new Uint8Array(cipher.length + tag.length);
+                combined.set(cipher, 0);
+                combined.set(tag, cipher.length);
+
+                if (isBrowser) {
+                    try {
+                        const aesKey = await window.crypto.subtle.importKey(
+                            "raw",
+                            key,
+                            { name: "AES-GCM" },
+                            false,
+                            ["decrypt"]
+                        );
+                        const decBuf = await window.crypto.subtle.decrypt(
+                            { name: "AES-GCM", iv: iv, tagLength: 128 },
+                            aesKey,
+                            combined
+                        );
+                        return new TextDecoder().decode(decBuf);
+                    } catch (e) {
+                        throw new Error("Sai mật khẩu hoặc bản mã AEAD đã bị sửa đổi.");
+                    }
+                } else if (nodeCrypto) {
+                    try {
+                        const decipher = nodeCrypto.createDecipheriv('aes-256-gcm', Buffer.from(key), Buffer.from(iv));
+                        decipher.setAuthTag(Buffer.from(tag));
+                        const decBuf = Buffer.concat([decipher.update(Buffer.from(cipher)), decipher.final()]);
+                        return decBuf.toString('utf8');
+                    } catch (e) {
+                        throw new Error("Sai mật khẩu hoặc bản mã AEAD đã bị sửa đổi.");
+                    }
+                }
+            } else {
+                // ChaCha20-Poly1305
+                const plain = ChaCha20Poly1305.decrypt(key, iv, cipher, tag, new Uint8Array(0));
+                return new TextDecoder().decode(plain);
+            }
+        }
+
+        throw new Error("Định dạng bản mã không được nhận diện (cần tiền tố Salted__, FCQGCM hoặc FCQCHA).");
+    }
+
     function suggestedEncryptedPath(name) {
         return (name || "encrypted") + ".fcq";
     }
@@ -639,6 +979,12 @@
         encryptFile,
         decryptFile,
         inspectFile,
+        encryptText,
+        decryptText,
+        bytesToHex,
+        hexToBytes,
+        bytesToBase64,
+        base64ToBytes,
         suggestedEncryptedPath,
         suggestedDecryptedPath,
         ChaCha20Poly1305,

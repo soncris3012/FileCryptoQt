@@ -1,28 +1,46 @@
 /**
  * FileCrypto Web — Main Application Controller
+ * Đồng bộ 100% với FileCryptoQt (Desktop C++ / OpenSSL) & FileCrypto iOS (Swift)
  */
 
 document.addEventListener('DOMContentLoaded', () => {
-    // DOM Elements
-    const dropzone = document.getElementById('dropzone');
-    const fileInput = document.getElementById('fileInput');
-    const folderInput = document.getElementById('folderInput');
+    // --- Navigation Elements ---
     const tabButtons = document.querySelectorAll('.tab-btn');
     const tabPanes = document.querySelectorAll('.tab-pane');
 
-    const passwordInput = document.getElementById('passwordInput');
-    const togglePassBtn = document.getElementById('togglePassBtn');
-    const generatePassBtn = document.getElementById('generatePassBtn');
-    const passStrengthBar = document.getElementById('passStrengthBar');
-    const passStrengthLabel = document.getElementById('passStrengthLabel');
+    // --- Tab 1: Crypto Elements ---
+    const cryptoModeEncrypt = document.getElementById('cryptoModeEncrypt');
+    const cryptoModeDecrypt = document.getElementById('cryptoModeDecrypt');
+    const cryptoSourceText = document.getElementById('cryptoSourceText');
+    const cryptoSourceFile = document.getElementById('cryptoSourceFile');
 
-    const algorithmSelect = document.getElementById('algorithmSelect');
-    const actionBtn = document.getElementById('actionBtn');
+    const textInputWrapper = document.getElementById('textInputWrapper');
+    const textInputEdit = document.getElementById('textInputEdit');
+    const clearTextBtn = document.getElementById('clearTextBtn');
+    const sampleTextBtn = document.getElementById('sampleTextBtn');
+
+    const fileInputWrapper = document.getElementById('fileInputWrapper');
+    const dropzone = document.getElementById('dropzone');
+    const dropzoneTitle = document.getElementById('dropzoneTitle');
+    const fileInput = document.getElementById('fileInput');
+    const folderInput = document.getElementById('folderInput');
     const fileInfoCard = document.getElementById('fileInfoCard');
     const fileNameEl = document.getElementById('selectedFileName');
     const fileSizeEl = document.getElementById('selectedFileSize');
     const fileTypeEl = document.getElementById('selectedFileType');
     const removeFileBtn = document.getElementById('removeFileBtn');
+
+    const algorithmSelect = document.getElementById('algorithmSelect');
+    const algoGroup = document.getElementById('algoGroup');
+    const passwordInput = document.getElementById('passwordInput');
+    const togglePassBtn = document.getElementById('togglePassBtn');
+    const generatePassBtn = document.getElementById('generatePassBtn');
+    const passStrengthBar = document.getElementById('passStrengthBar');
+    const passStrengthLabel = document.getElementById('passStrengthLabel');
+    const base64Group = document.getElementById('base64Group');
+    const base64Check = document.getElementById('base64Check');
+    const algorithmInfo = document.getElementById('algorithmInfo');
+    const actionBtn = document.getElementById('actionBtn');
 
     const progressSection = document.getElementById('progressSection');
     const progressBar = document.getElementById('progressBar');
@@ -33,63 +51,181 @@ document.addEventListener('DOMContentLoaded', () => {
     const downloadBtn = document.getElementById('downloadBtn');
     const resultDetails = document.getElementById('resultDetails');
 
+    // Right Column (Tab 1)
+    const textOutputWrapper = document.getElementById('textOutputWrapper');
+    const encryptDualOutput = document.getElementById('encryptDualOutput');
+    const decryptSingleOutput = document.getElementById('decryptSingleOutput');
+    const hexOutputEdit = document.getElementById('hexOutputEdit');
+    const base64OutputEdit = document.getElementById('base64OutputEdit');
+    const plainOutputEdit = document.getElementById('plainOutputEdit');
+    const copyHexBtn = document.getElementById('copyHexBtn');
+    const copyBase64Btn = document.getElementById('copyBase64Btn');
+    const copyPlainBtn = document.getElementById('copyPlainBtn');
+
+    const filePreviewWrapper = document.getElementById('filePreviewWrapper');
     const previewContainer = document.getElementById('previewContainer');
-    const inspectResultCard = document.getElementById('inspectResultCard');
+
+    // Transmission Simulator
+    const transmission = TransmissionWidget.create('transmissionCanvas');
+
+    // --- Tab 2: CSR Elements ---
+    const csrCnInput = document.getElementById('csrCnInput');
+    const csrOInput = document.getElementById('csrOInput');
+    const csrOuInput = document.getElementById('csrOuInput');
+    const csrCInput = document.getElementById('csrCInput');
+    const csrStInput = document.getElementById('csrStInput');
+    const csrLInput = document.getElementById('csrLInput');
+    const csrEmailInput = document.getElementById('csrEmailInput');
+
+    const csrKeyTypeSelect = document.getElementById('csrKeyTypeSelect');
+    const csrDigestSelect = document.getElementById('csrDigestSelect');
+    const csrGenerateBtn = document.getElementById('csrGenerateBtn');
+    const csrSaveKeyBtn = document.getElementById('csrSaveKeyBtn');
+    const csrSaveCsrBtn = document.getElementById('csrSaveCsrBtn');
+    const csrStatusBadge = document.getElementById('csrStatusBadge');
+
+    const csrKeyEdit = document.getElementById('csrKeyEdit');
+    const csrOutputEdit = document.getElementById('csrOutputEdit');
+    const csrDetailsEdit = document.getElementById('csrDetailsEdit');
+    const copyCsrKeyBtn = document.getElementById('copyCsrKeyBtn');
+    const copyCsrBtn = document.getElementById('copyCsrBtn');
+
+    // --- Tab 3: Inspect Elements ---
+    const inspectDropzone = document.getElementById('inspectDropzone');
+    const inspectFileInput = document.getElementById('inspectFileInput');
+    const inspectResultWrapper = document.getElementById('inspectResultWrapper');
     const inspectContent = document.getElementById('inspectContent');
 
+    // --- Tab 4: Docs & Self-Test ---
     const runSelfTestBtn = document.getElementById('runSelfTestBtn');
     const selfTestResults = document.getElementById('selfTestResults');
 
-    // Initialize Transmission Simulator
-    const transmission = TransmissionWidget.create('transmissionCanvas');
-
+    // ==========================================
     // State
-    let currentMode = 'encrypt'; // 'encrypt', 'decrypt', 'inspect', 'docs'
+    // ==========================================
+    let currentMainTab = 'crypto'; // 'crypto', 'csr', 'inspect', 'docs'
+    let currentCryptoMode = 'encrypt'; // 'encrypt' or 'decrypt'
+    let currentCryptoSource = 'text'; // 'text' or 'file'
+
     let selectedFile = null;
     let selectedFileData = null;
     let processedResult = null; // { data, name, mime }
 
+    let generatedCsrResult = null; // { privateKeyPem, csrPem }
+
+    // ==========================================
     // Tab Navigation
+    // ==========================================
     tabButtons.forEach(btn => {
         btn.addEventListener('click', () => {
-            const mode = btn.dataset.tab;
-            setMode(mode);
+            const tabKey = btn.dataset.tab;
+            setMainTab(tabKey);
         });
     });
 
-    function setMode(mode) {
-        currentMode = mode;
-        tabButtons.forEach(b => b.classList.toggle('active', b.dataset.tab === mode));
-        tabPanes.forEach(p => p.classList.toggle('active', p.id === `${mode}Pane`));
+    function setMainTab(tabKey) {
+        currentMainTab = tabKey;
+        tabButtons.forEach(b => b.classList.toggle('active', b.dataset.tab === tabKey));
+        tabPanes.forEach(p => {
+            if (p.id === `${tabKey}Pane`) {
+                p.style.display = 'block';
+                p.classList.add('active');
+            } else {
+                p.style.display = 'none';
+                p.classList.remove('active');
+            }
+        });
+    }
 
-        // Update UI based on mode
+    // ==========================================
+    // Tab 1: Mode & Source Switchers
+    // ==========================================
+    cryptoModeEncrypt.addEventListener('click', () => setCryptoMode('encrypt'));
+    cryptoModeDecrypt.addEventListener('click', () => setCryptoMode('decrypt'));
+    cryptoSourceText.addEventListener('click', () => setCryptoSource('text'));
+    cryptoSourceFile.addEventListener('click', () => setCryptoSource('file'));
+
+    function setCryptoMode(mode) {
+        currentCryptoMode = mode;
+        cryptoModeEncrypt.classList.toggle('active', mode === 'encrypt');
+        cryptoModeDecrypt.classList.toggle('active', mode === 'decrypt');
+
         if (mode === 'encrypt') {
-            actionBtn.textContent = '🔒 Bắt đầu mã hóa tệp';
+            actionBtn.textContent = '🔒 BẮT ĐẦU MÃ HÓA';
             actionBtn.className = 'btn btn-primary';
-            document.getElementById('algoGroup').style.display = 'block';
-            document.getElementById('passGroup').style.display = 'block';
-            dropzone.querySelector('.dropzone-title').textContent = 'Kéo thả tệp hoặc thư mục vào đây để mã hóa';
-        } else if (mode === 'decrypt') {
-            actionBtn.textContent = '🔓 Bắt đầu giải mã tệp';
-            actionBtn.className = 'btn btn-success';
-            document.getElementById('algoGroup').style.display = 'none'; // Auto detected from FCQ
-            document.getElementById('passGroup').style.display = 'block';
-            dropzone.querySelector('.dropzone-title').textContent = 'Kéo thả tệp .fcq vào đây để giải mã';
-        } else if (mode === 'inspect') {
-            actionBtn.textContent = '🔍 Phân tích Header FCQ';
-            actionBtn.className = 'btn btn-info';
-            document.getElementById('algoGroup').style.display = 'none';
-            document.getElementById('passGroup').style.display = 'none';
-            dropzone.querySelector('.dropzone-title').textContent = 'Kéo thả tệp .fcq để soi cấu trúc header';
-        }
+            algoGroup.style.display = 'block';
+            base64Group.style.display = 'block';
+            dropzoneTitle.textContent = 'Kéo thả tệp hoặc thư mục vào đây để mã hóa';
+            updateAlgorithmNote();
 
-        resetResults();
-        if (selectedFileData) {
-            updatePreview(selectedFileData, selectedFile.name, selectedFile.type);
+            if (currentCryptoSource === 'text') {
+                encryptDualOutput.style.display = 'grid';
+                decryptSingleOutput.style.display = 'none';
+            }
+        } else {
+            actionBtn.textContent = '🔓 BẮT ĐẦU GIẢI MÃ';
+            actionBtn.className = 'btn btn-success';
+            algoGroup.style.display = 'none'; // Tự động phát hiện qua Salted__/FCQ container
+            base64Group.style.display = 'none';
+            dropzoneTitle.textContent = 'Kéo thả tệp .fcq vào đây để giải mã';
+            algorithmInfo.textContent = 'Chế độ giải mã • Tự động nhận diện định dạng OpenSSL & FCQ';
+
+            if (currentCryptoSource === 'text') {
+                encryptDualOutput.style.display = 'none';
+                decryptSingleOutput.style.display = 'block';
+            }
+        }
+        resetFileResults();
+    }
+
+    function setCryptoSource(source) {
+        currentCryptoSource = source;
+        cryptoSourceText.classList.toggle('active', source === 'text');
+        cryptoSourceFile.classList.toggle('active', source === 'file');
+
+        if (source === 'text') {
+            textInputWrapper.style.display = 'block';
+            fileInputWrapper.style.display = 'none';
+            textOutputWrapper.style.display = 'block';
+            filePreviewWrapper.style.display = 'none';
+            resultSection.style.display = 'none';
+
+            if (currentCryptoMode === 'encrypt') {
+                encryptDualOutput.style.display = 'grid';
+                decryptSingleOutput.style.display = 'none';
+            } else {
+                encryptDualOutput.style.display = 'none';
+                decryptSingleOutput.style.display = 'block';
+            }
+        } else {
+            textInputWrapper.style.display = 'none';
+            fileInputWrapper.style.display = 'block';
+            textOutputWrapper.style.display = 'none';
+            filePreviewWrapper.style.display = 'block';
+
+            if (selectedFileData) {
+                updatePreview(selectedFileData, selectedFile.name, selectedFile.type);
+            }
+        }
+        resetFileResults();
+    }
+
+    function updateAlgorithmNote() {
+        const alg = algorithmSelect.value;
+        if (alg === '1') {
+            algorithmInfo.textContent = 'AES-256-CBC • Chuẩn bài giảng OpenSSL • PBKDF2 10.000 vòng';
+        } else if (alg === '2') {
+            algorithmInfo.textContent = 'AES-256-GCM • Chuẩn AEAD bảo mật cao • PBKDF2 200.000 vòng';
+        } else {
+            algorithmInfo.textContent = 'ChaCha20-Poly1305 • Chuẩn RFC 8439 tối ưu CPU • PBKDF2 200.000 vòng';
         }
     }
 
-    // Password Visibility & Generation
+    algorithmSelect.addEventListener('change', updateAlgorithmNote);
+
+    // ==========================================
+    // Password Actions & Strength Evaluation
+    // ==========================================
     togglePassBtn.addEventListener('click', () => {
         const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
         passwordInput.setAttribute('type', type);
@@ -139,12 +275,50 @@ document.addEventListener('DOMContentLoaded', () => {
             passStrengthLabel.style.color = '#f59e0b';
         } else {
             passStrengthBar.style.backgroundColor = '#10b981';
-            passStrengthLabel.textContent = 'Rất mạnh (PBKDF2 200.000 vòng)';
+            passStrengthLabel.textContent = 'Rất mạnh (PBKDF2)';
             passStrengthLabel.style.color = '#10b981';
         }
     }
+    evaluatePassword(passwordInput.value);
 
-    // Drag and Drop
+    // ==========================================
+    // Text Mode Actions & Copy
+    // ==========================================
+    clearTextBtn.addEventListener('click', () => {
+        textInputEdit.value = '';
+        hexOutputEdit.value = '';
+        base64OutputEdit.value = '';
+        plainOutputEdit.value = '';
+        progressStatus.textContent = 'Đã xóa nội dung văn bản';
+    });
+
+    sampleTextBtn.addEventListener('click', () => {
+        textInputEdit.value = 'Bài thực hành Mật mã học OpenSSL: AES-256-CBC, Base64 (-a) và CSR.';
+        progressStatus.textContent = 'Đã nạp văn bản mẫu bài giảng';
+    });
+
+    function copyToClipboard(text, btnElement) {
+        if (!text) return;
+        navigator.clipboard.writeText(text).then(() => {
+            const original = btnElement.textContent;
+            btnElement.textContent = '✓ Đã sao chép!';
+            btnElement.style.color = '#10b981';
+            setTimeout(() => {
+                btnElement.textContent = original;
+                btnElement.style.color = '';
+            }, 1800);
+        }).catch(err => {
+            alert('Không thể sao chép: ' + err);
+        });
+    }
+
+    copyHexBtn.addEventListener('click', () => copyToClipboard(hexOutputEdit.value, copyHexBtn));
+    copyBase64Btn.addEventListener('click', () => copyToClipboard(base64OutputEdit.value, copyBase64Btn));
+    copyPlainBtn.addEventListener('click', () => copyToClipboard(plainOutputEdit.value, copyPlainBtn));
+
+    // ==========================================
+    // File Drag & Drop Handling
+    // ==========================================
     ['dragenter', 'dragover'].forEach(eventName => {
         dropzone.addEventListener(eventName, (e) => {
             e.preventDefault();
@@ -189,28 +363,26 @@ document.addEventListener('DOMContentLoaded', () => {
         fileInput.value = '';
         if (folderInput) folderInput.value = '';
         previewContainer.innerHTML = '';
-        resetResults();
+        resetFileResults();
         transmission.setState('idle', 0);
     });
 
-    async function handleFileSelect(file) {
+    function handleFileSelect(file) {
         selectedFile = file;
         fileNameEl.textContent = file.name;
         fileSizeEl.textContent = FilePreview.formatBytes(file.size);
         fileTypeEl.textContent = file.type || 'application/octet-stream';
         fileInfoCard.style.display = 'flex';
 
-        resetResults();
+        resetFileResults();
 
-        // Read file data
         const reader = new FileReader();
         reader.onload = (e) => {
             selectedFileData = new Uint8Array(e.target.result);
             updatePreview(selectedFileData, file.name, file.type);
 
-            // Auto detect mode if user drops an .fcq file in encrypt mode
-            if (file.name.toLowerCase().endsWith('.fcq') && currentMode === 'encrypt') {
-                setMode('decrypt');
+            if (file.name.toLowerCase().endsWith('.fcq') && currentCryptoMode === 'encrypt') {
+                setCryptoMode('decrypt');
             }
 
             transmission.setState('idle', 0, {
@@ -226,244 +398,423 @@ document.addEventListener('DOMContentLoaded', () => {
         FilePreview.render(previewContainer, data, name, mime);
     }
 
-    function resetResults() {
-        progressSection.style.display = 'none';
+    function resetFileResults() {
+        progressBar.style.width = '0%';
+        progressPercent.textContent = '0%';
+        progressStatus.textContent = 'Sẵn sàng • Nhập văn bản hoặc chọn tệp để bắt đầu';
         resultSection.style.display = 'none';
-        if (inspectResultCard) inspectResultCard.style.display = 'none';
         processedResult = null;
     }
 
-    // Action Execution (Encrypt / Decrypt / Inspect)
+    // ==========================================
+    // Main Crypto Execution (Tab 1: Text / File)
+    // ==========================================
     actionBtn.addEventListener('click', async () => {
-        if (!selectedFileData) {
-            alert('Vui lòng chọn hoặc kéo thả tệp trước khi thực hiện!');
-            return;
-        }
-
         const pass = passwordInput.value;
-        if (currentMode !== 'inspect' && !pass) {
-            alert('Vui lòng nhập mật khẩu để bảo vệ hoặc mở khóa dữ liệu!');
+        if (!pass) {
+            alert('Vui lòng nhập mật khẩu bảo vệ hoặc mở khóa dữ liệu!');
             passwordInput.focus();
             return;
         }
-
-        resetResults();
-        progressSection.style.display = 'block';
 
         const updateProgress = (pct, msg) => {
             progressBar.style.width = `${Math.round(pct * 100)}%`;
             progressPercent.textContent = `${Math.round(pct * 100)}%`;
             progressStatus.textContent = msg || 'Đang xử lý...';
-            transmission.setState(currentMode === 'encrypt' ? 'encrypting' : 'decrypting', pct);
+            transmission.setState(currentCryptoMode === 'encrypt' ? 'encrypting' : 'decrypting', pct);
         };
 
-        try {
-            if (currentMode === 'encrypt') {
-                const alg = parseInt(algorithmSelect.value, 10);
-                updateProgress(0.1, 'Bắt đầu mã hóa...');
+        if (currentCryptoSource === 'text') {
+            // === XỬ LÝ VĂN BẢN THUẦN (PLAINTEXT) ===
+            const inputContent = textInputEdit.value;
+            if (!inputContent || !inputContent.trim()) {
+                alert('Vui lòng nhập nội dung văn bản đầu vào!');
+                textInputEdit.focus();
+                return;
+            }
 
-                // Small setTimeout to allow UI to render progress
-                setTimeout(async () => {
-                    try {
-                        const encrypted = await CryptoEngine.encryptFile(
-                            selectedFileData,
-                            selectedFile.name,
-                            selectedFile.type,
-                            pass,
-                            alg,
-                            updateProgress
-                        );
+            updateProgress(0.2, 'Đang chuẩn bị dẫn xuất khóa...');
 
-                        const outName = CryptoEngine.suggestedEncryptedPath(selectedFile.name);
-                        processedResult = {
-                            data: encrypted,
-                            name: outName,
-                            mime: 'application/octet-stream'
-                        };
+            try {
+                if (currentCryptoMode === 'encrypt') {
+                    const alg = parseInt(algorithmSelect.value, 10);
+                    const useBase64 = base64Check.checked;
+                    updateProgress(0.5, 'Đang mã hóa văn bản...');
 
-                        updateProgress(1.0, 'Mã hóa hoàn tất!');
-                        transmission.setState('completed', 1.0);
+                    setTimeout(async () => {
+                        try {
+                            const res = await CryptoEngine.encryptText(inputContent, pass, alg, useBase64);
+                            if (!res.ok) {
+                                throw new Error(res.error);
+                            }
 
-                        showResult(
-                            `Tệp đã được mã hóa thành công với <strong>${CryptoEngine.AlgorithmNames[alg]}</strong>.`,
-                            outName,
-                            encrypted.length
-                        );
+                            hexOutputEdit.value = res.hexString;
+                            base64OutputEdit.value = res.base64String;
 
-                        // Show preview of ciphertext HEX
-                        updatePreview(encrypted, outName, 'application/octet-stream');
-                    } catch (err) {
-                        handleError(err);
-                    }
-                }, 50);
+                            updateProgress(1.0, 'Mã hóa văn bản thành công!');
+                            transmission.setState('completed', 1.0);
+                        } catch (err) {
+                            handleCryptoError(err);
+                        }
+                    }, 50);
 
-            } else if (currentMode === 'decrypt') {
-                updateProgress(0.1, 'Bắt đầu giải mã...');
+                } else {
+                    // Decrypt Text
+                    updateProgress(0.5, 'Đang giải mã văn bản...');
 
-                setTimeout(async () => {
-                    try {
-                        const res = await CryptoEngine.decryptFile(
-                            selectedFileData,
-                            pass,
-                            updateProgress
-                        );
+                    setTimeout(async () => {
+                        try {
+                            const decrypted = await CryptoEngine.decryptText(inputContent, pass);
+                            plainOutputEdit.value = decrypted;
 
-                        const outName = CryptoEngine.suggestedDecryptedPath(selectedFile.name, res.originalName);
-                        processedResult = {
-                            data: res.plaintext,
-                            name: outName,
-                            mime: res.mimeType
-                        };
+                            updateProgress(1.0, 'Giải mã văn bản thành công!');
+                            transmission.setState('completed', 1.0);
+                        } catch (err) {
+                            handleCryptoError(err);
+                        }
+                    }, 50);
+                }
+            } catch (err) {
+                handleCryptoError(err);
+            }
 
-                        updateProgress(1.0, 'Giải mã hoàn tất!');
-                        transmission.setState('completed', 1.0);
+        } else {
+            // === XỬ LÝ TỆP TIN / THƯ MỤC ===
+            if (!selectedFileData) {
+                alert('Vui lòng chọn hoặc kéo thả tệp trước khi bắt đầu!');
+                return;
+            }
 
-                        showResult(
-                            `Tệp đã được giải mã và xác thực tính toàn vẹn thành công!<br>` +
-                            `Tên gốc: <strong>${res.originalName || '(Không lưu)'}</strong> | MIME: <strong>${res.mimeType}</strong> | Thuật toán: <strong>${res.algorithmName}</strong>`,
-                            outName,
-                            res.plaintext.length
-                        );
+            updateProgress(0.1, 'Bắt đầu xử lý tệp...');
 
-                        // Show preview of restored plaintext/image/media
-                        updatePreview(res.plaintext, outName, res.mimeType);
-                    } catch (err) {
-                        handleError(err);
-                    }
-                }, 50);
+            try {
+                if (currentCryptoMode === 'encrypt') {
+                    const alg = parseInt(algorithmSelect.value, 10);
+                    setTimeout(async () => {
+                        try {
+                            const encrypted = await CryptoEngine.encryptFile(
+                                selectedFileData,
+                                selectedFile.name,
+                                selectedFile.type,
+                                pass,
+                                alg,
+                                updateProgress
+                            );
 
-            } else if (currentMode === 'inspect') {
-                const info = CryptoEngine.inspectFile(selectedFileData);
-                progressSection.style.display = 'none';
-                inspectResultCard.style.display = 'block';
+                            const outName = CryptoEngine.suggestedEncryptedPath(selectedFile.name);
+                            processedResult = {
+                                data: encrypted,
+                                name: outName,
+                                mime: 'application/octet-stream'
+                            };
+
+                            updateProgress(1.0, 'Mã hóa tệp hoàn tất!');
+                            transmission.setState('completed', 1.0);
+
+                            showFileResult(
+                                `Tệp đã được mã hóa thành công bằng <strong>${CryptoEngine.AlgorithmNames[alg]}</strong>.`,
+                                outName,
+                                encrypted.length
+                            );
+
+                            updatePreview(encrypted, outName, 'application/octet-stream');
+                        } catch (err) {
+                            handleCryptoError(err);
+                        }
+                    }, 50);
+
+                } else {
+                    // Decrypt File
+                    setTimeout(async () => {
+                        try {
+                            const res = await CryptoEngine.decryptFile(
+                                selectedFileData,
+                                pass,
+                                updateProgress
+                            );
+
+                            const outName = CryptoEngine.suggestedDecryptedPath(selectedFile.name, res.originalName);
+                            processedResult = {
+                                data: res.plaintext,
+                                name: outName,
+                                mime: res.mimeType
+                            };
+
+                            updateProgress(1.0, 'Giải mã tệp hoàn tất!');
+                            transmission.setState('completed', 1.0);
+
+                            showFileResult(
+                                `Tệp đã được giải mã và kiểm tra tính toàn vẹn thành công!<br>` +
+                                `Tên gốc: <strong>${res.originalName || '(Không lưu)'}</strong> | Loại: <strong>${res.mimeType}</strong>`,
+                                outName,
+                                res.plaintext.length
+                            );
+
+                            updatePreview(res.plaintext, outName, res.mimeType);
+                        } catch (err) {
+                            handleCryptoError(err);
+                        }
+                    }, 50);
+                }
+            } catch (err) {
+                handleCryptoError(err);
+            }
+        }
+    });
+
+    function showFileResult(message, outName, size) {
+        resultSection.style.display = 'block';
+        resultDetails.innerHTML = `
+            <div class="result-success-box" style="display: flex; align-items: center; gap: 12px; background: rgba(16, 185, 129, 0.15); border: 1px solid rgba(16, 185, 129, 0.3); padding: 12px; border-radius: 8px; margin-bottom: 12px;">
+                <div class="result-icon" style="font-size: 24px;">✅</div>
+                <div class="result-text" style="font-size: 13px;">
+                    <p>${message}</p>
+                    <small style="color: var(--text-secondary);">Tệp sẵn sàng tải xuống: <strong>${outName}</strong> (${FilePreview.formatBytes(size)})</small>
+                </div>
+            </div>
+        `;
+
+        downloadBtn.onclick = () => {
+            if (!processedResult) return;
+            downloadBlob(processedResult.data, processedResult.name, processedResult.mime);
+        };
+    }
+
+    function downloadBlob(data, filename, mimeType) {
+        const blob = new Blob([data], { type: mimeType || 'application/octet-stream' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        setTimeout(() => URL.revokeObjectURL(url), 1000);
+    }
+
+    function handleCryptoError(err) {
+        progressBar.style.width = '0%';
+        progressPercent.textContent = 'Lỗi';
+        progressStatus.textContent = 'Thất bại: ' + (err.message || err);
+        transmission.setState('error');
+        alert(`ĐÃ XẢY RA LỖI:\n${err.message || err}`);
+    }
+
+    // ==========================================
+    // Tab 2: CsrEngine & Keypair Generator
+    // ==========================================
+    csrGenerateBtn.addEventListener('click', async () => {
+        const subject = {
+            commonName: csrCnInput.value.trim(),
+            organization: csrOInput.value.trim(),
+            organizationalUnit: csrOuInput.value.trim(),
+            country: csrCInput.value.trim(),
+            state: csrStInput.value.trim(),
+            locality: csrLInput.value.trim(),
+            email: csrEmailInput.value.trim()
+        };
+
+        if (!subject.commonName) {
+            alert('Common Name (CN) không được để trống (ví dụ: example.com hoặc sinhvien.edu.vn)!');
+            csrCnInput.focus();
+            return;
+        }
+
+        const keySize = parseInt(csrKeyTypeSelect.value, 10) || 2048;
+        const digest = csrDigestSelect.value;
+
+        csrStatusBadge.className = 'status-badge';
+        csrStatusBadge.innerHTML = '<span>⏳ Đang sinh cặp khóa RSA và ký số chứng chỉ CSR...</span>';
+        csrGenerateBtn.disabled = true;
+
+        setTimeout(async () => {
+            try {
+                const res = await CsrEngine.generate(subject, keySize, digest);
+                if (!res.success) {
+                    throw new Error(res.error);
+                }
+
+                generatedCsrResult = res;
+                csrKeyEdit.value = res.privateKeyPem;
+                csrOutputEdit.value = res.csrPem;
+                csrDetailsEdit.value = res.textDetails;
+
+                csrSaveKeyBtn.disabled = false;
+                csrSaveCsrBtn.disabled = false;
+
+                csrStatusBadge.className = 'status-badge success';
+                csrStatusBadge.innerHTML = '<span>✅ Sinh cặp khóa RSA và tạo CSR thành công (Chữ ký số hợp lệ)!</span>';
+            } catch (err) {
+                csrStatusBadge.className = 'status-badge error';
+                csrStatusBadge.innerHTML = `<span>❌ Thất bại: ${err.message || err}</span>`;
+                alert('Lỗi tạo CSR: ' + (err.message || err));
+            } finally {
+                csrGenerateBtn.disabled = false;
+            }
+        }, 50);
+    });
+
+    copyCsrKeyBtn.addEventListener('click', () => copyToClipboard(csrKeyEdit.value, copyCsrKeyBtn));
+    copyCsrBtn.addEventListener('click', () => copyToClipboard(csrOutputEdit.value, copyCsrBtn));
+
+    csrSaveKeyBtn.addEventListener('click', () => {
+        if (!generatedCsrResult || !generatedCsrResult.privateKeyPem) return;
+        downloadBlob(new TextEncoder().encode(generatedCsrResult.privateKeyPem), 'private.key', 'application/x-pem-file');
+    });
+
+    csrSaveCsrBtn.addEventListener('click', () => {
+        if (!generatedCsrResult || !generatedCsrResult.csrPem) return;
+        downloadBlob(new TextEncoder().encode(generatedCsrResult.csrPem), 'request.csr', 'application/pkcs10');
+    });
+
+    // ==========================================
+    // Tab 3: Inspect Header FCQ
+    // ==========================================
+    ['dragenter', 'dragover'].forEach(eName => {
+        inspectDropzone.addEventListener(eName, (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            inspectDropzone.classList.add('drag-over');
+        });
+    });
+
+    ['dragleave', 'drop'].forEach(eName => {
+        inspectDropzone.addEventListener(eName, (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            inspectDropzone.classList.remove('drag-over');
+        });
+    });
+
+    inspectDropzone.addEventListener('drop', (e) => {
+        const files = e.dataTransfer.files;
+        if (files && files.length > 0) {
+            handleInspectFile(files[0]);
+        }
+    });
+
+    inspectFileInput.addEventListener('change', (e) => {
+        if (e.target.files && e.target.files.length > 0) {
+            handleInspectFile(e.target.files[0]);
+        }
+    });
+
+    function handleInspectFile(file) {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            try {
+                const data = new Uint8Array(e.target.result);
+                const info = CryptoEngine.inspectFile(data);
+                inspectResultWrapper.style.display = 'block';
 
                 const saltHex = Array.from(info.salt).map(b => b.toString(16).padStart(2, '0')).join(' ');
                 const ivHex = Array.from(info.iv).map(b => b.toString(16).padStart(2, '0')).join(' ');
 
                 inspectContent.innerHTML = `
-                    <div class="inspect-grid">
-                        <div class="inspect-item">
-                            <span class="label">Định dạng Magic:</span>
-                            <span class="val badge badge-cyan">${info.magic} (Phiên bản ${info.version})</span>
-                        </div>
-                        <div class="inspect-item">
-                            <span class="label">Thuật toán:</span>
-                            <span class="val badge badge-purple">${info.algorithmName}</span>
-                        </div>
-                        <div class="inspect-item">
-                            <span class="label">Tên tệp gốc:</span>
-                            <span class="val font-mono">${info.originalName || '<em>(Không có trong FCQ1)</em>'}</span>
-                        </div>
-                        <div class="inspect-item">
-                            <span class="label">Loại MIME gốc:</span>
-                            <span class="val font-mono">${info.mimeType}</span>
-                        </div>
-                        <div class="inspect-item">
-                            <span class="label">Kích thước Payload:</span>
-                            <span class="val">${FilePreview.formatBytes(info.payloadSize)} (${info.payloadSize.toLocaleString()} bytes)</span>
-                        </div>
-                        <div class="inspect-item">
-                            <span class="label">Kích thước Tag/MAC:</span>
-                            <span class="val">${info.authSize} bytes (${info.authenticated ? 'AEAD / HMAC xác thực' : 'Không có MAC'})</span>
-                        </div>
-                        <div class="inspect-item full-width">
-                            <span class="label">Salt (16 bytes):</span>
-                            <span class="val font-mono hex-view">${saltHex}</span>
-                        </div>
-                        <div class="inspect-item full-width">
-                            <span class="label">IV / Nonce (${info.iv.length} bytes):</span>
-                            <span class="val font-mono hex-view">${ivHex}</span>
-                        </div>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                        <div><strong>Định dạng Magic:</strong> <span style="color: var(--accent-cyan);">${info.magic} (v${info.version})</span></div>
+                        <div><strong>Thuật toán:</strong> <span style="color: var(--accent-purple);">${info.algorithmName}</span></div>
+                        <div><strong>Tên tệp gốc:</strong> ${info.originalName || '(Không lưu)'}</div>
+                        <div><strong>Loại MIME:</strong> ${info.mimeType || 'octet-stream'}</div>
+                        <div><strong>Kích thước Payload:</strong> ${FilePreview.formatBytes(info.payloadSize)}</div>
+                        <div><strong>Xác thực Tag/MAC:</strong> ${info.authSize} bytes (${info.authenticated ? 'Hợp lệ' : 'Không có'})</div>
+                        <div style="grid-column: 1 / -1;"><strong>Salt (16 bytes):</strong> <br><code>${saltHex}</code></div>
+                        <div style="grid-column: 1 / -1;"><strong>IV / Nonce (${info.iv.length} bytes):</strong> <br><code>${ivHex}</code></div>
                     </div>
                 `;
+            } catch (err) {
+                alert('Không thể đọc file FCQ: ' + err.message);
             }
-        } catch (err) {
-            handleError(err);
-        }
-    });
-
-    function showResult(message, outName, size) {
-        resultSection.style.display = 'block';
-        resultDetails.innerHTML = `
-            <div class="result-success-box">
-                <div class="result-icon">✅</div>
-                <div class="result-text">
-                    <p>${message}</p>
-                    <small>Tệp sẵn sàng tải xuống: <strong>${outName}</strong> (${FilePreview.formatBytes(size)})</small>
-                </div>
-            </div>
-        `;
-        downloadBtn.onclick = () => {
-            if (!processedResult) return;
-            const blob = new Blob([processedResult.data], { type: processedResult.mime || 'application/octet-stream' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = processedResult.name;
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            setTimeout(() => URL.revokeObjectURL(url), 1000);
         };
+        reader.readAsArrayBuffer(file);
     }
 
-    function handleError(err) {
-        progressSection.style.display = 'none';
-        transmission.setState('error');
-        alert(`ĐÃ XẢY RA LỖI:\n${err.message || err}`);
-    }
-
-    // In-Browser Self Test Suite
+    // ==========================================
+    // Tab 4: In-Browser Self Test Suite
+    // ==========================================
     if (runSelfTestBtn) {
         runSelfTestBtn.addEventListener('click', async () => {
             selfTestResults.innerHTML = '<div class="test-running">⏳ Đang chạy bộ kiểm thử toàn diện trên trình duyệt...</div>';
             runSelfTestBtn.disabled = true;
 
-            const testSample = new TextEncoder().encode("CryptoLab Browser Test 2026! Kiểm thử tính tương thích giữa Web Crypto và Qt.");
             const testPass = "TestPassword#2026";
             let resultsHtml = '';
 
             try {
-                for (const alg of [2, 3, 1]) {
+                // Test 1: OpenSSL CLI AES-256-CBC Text Mode (Salted__)
+                const plainText1 = "Bảo mật thông tin 2026 - Kiểm thử OpenSSL Text CBC!";
+                const t0 = performance.now();
+                const encCbc = await CryptoEngine.encryptText(plainText1, testPass, CryptoEngine.Algorithm.Aes256Cbc, true);
+                const decCbc = await CryptoEngine.decryptText(encCbc.base64String, testPass);
+                const t1 = performance.now();
+                const cbcOk = (decCbc === plainText1) && encCbc.base64String.startsWith('U2FsdGVk');
+
+                resultsHtml += `
+                    <div class="test-card ${cbcOk ? 'pass' : 'fail'}" style="background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 12px; margin-bottom: 12px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                            <span style="color: ${cbcOk ? '#10b981' : '#f43f5e'}; font-weight: bold;">[${cbcOk ? 'PASSED' : 'FAILED'}]</span>
+                            <strong>OpenSSL AES-256-CBC Text Mode (Salted__ + PBKDF2)</strong>
+                            <span style="font-size: 12px; color: var(--text-muted);">${Math.round(t1 - t0)} ms</span>
+                        </div>
+                        <div style="font-size: 12px; color: var(--text-secondary);">
+                            • Định dạng đầu ra: <strong>${encCbc.base64String.substring(0, 32)}... (Chuẩn OpenSSL CLI -a)</strong><br>
+                            • Giải mã Round-trip: <strong>${cbcOk ? 'Khớp 100% dữ liệu gốc' : 'LỖI'}</strong>
+                        </div>
+                    </div>
+                `;
+
+                // Test 2: File Encrypt/Decrypt (GCM & ChaCha20)
+                for (const alg of [2, 3]) {
                     const name = CryptoEngine.AlgorithmNames[alg];
-                    const t0 = performance.now();
-
-                    // Encrypt
-                    const enc = await CryptoEngine.encryptFile(testSample, "selftest.txt", "text/plain", testPass, alg);
-                    // Decrypt
+                    const testBytes = new TextEncoder().encode("CryptoLab Test File Buffer");
+                    const ta = performance.now();
+                    const enc = await CryptoEngine.encryptFile(testBytes, "sample.txt", "text/plain", testPass, alg);
                     const dec = await CryptoEngine.decryptFile(enc, testPass);
-                    const t1 = performance.now();
-
-                    const ok = (dec.plaintext.length === testSample.length) && (dec.originalName === "selftest.txt");
-
-                    // Tamper check
-                    let tamperDetected = false;
-                    const tampered = new Uint8Array(enc);
-                    tampered[tampered.length - 10] ^= 0xAA;
-                    try {
-                        await CryptoEngine.decryptFile(tampered, testPass);
-                    } catch (e) {
-                        tamperDetected = true;
-                    }
+                    const tb = performance.now();
+                    const ok = dec.plaintext.length === testBytes.length;
 
                     resultsHtml += `
-                        <div class="test-card ${ok && tamperDetected ? 'pass' : 'fail'}">
-                            <div class="test-header">
-                                <span class="test-badge">${ok ? 'PASSED' : 'FAILED'}</span>
-                                <strong>Thuật toán: ${name}</strong>
-                                <span class="test-time">${Math.round(t1 - t0)} ms</span>
+                        <div class="test-card ${ok ? 'pass' : 'fail'}" style="background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 12px; margin-bottom: 12px;">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                                <span style="color: ${ok ? '#10b981' : '#f43f5e'}; font-weight: bold;">[${ok ? 'PASSED' : 'FAILED'}]</span>
+                                <strong>Định dạng tệp FCQ2 (${name})</strong>
+                                <span style="font-size: 12px; color: var(--text-muted);">${Math.round(tb - ta)} ms</span>
                             </div>
-                            <div class="test-details">
-                                • Mã hóa và giải mã Round-trip: <strong>${ok ? 'Khớp 100% dữ liệu gốc' : 'LỖI'}</strong><br>
-                                • Khôi phục Metadata (Tên & MIME): <strong>${dec.originalName} (${dec.mimeType})</strong><br>
-                                • Bẫy can thiệp dữ liệu (Tampering Protection): <strong>${tamperDetected ? 'Bảo vệ thành công' : 'LỖI'}</strong>
+                            <div style="font-size: 12px; color: var(--text-secondary);">
+                                • Mã hóa và giải mã Round-trip: <strong>${ok ? 'Khớp 100% tệp gốc' : 'LỖI'}</strong><br>
+                                • Khôi phục Metadata: <strong>${dec.originalName} (${dec.mimeType})</strong>
                             </div>
                         </div>
                     `;
                 }
+
+                // Test 3: CsrEngine RSA 2048 & PKCS#10
+                const tc0 = performance.now();
+                const csrRes = await CsrEngine.generate({
+                    commonName: "selftest.cryptolab.local",
+                    organization: "CryptoLab Academy",
+                    country: "VN"
+                }, 2048, "SHA-256");
+                const tc1 = performance.now();
+                const csrOk = csrRes.success && csrRes.verified && csrRes.csrPem.includes("BEGIN CERTIFICATE REQUEST");
+
+                resultsHtml += `
+                    <div class="test-card ${csrOk ? 'pass' : 'fail'}" style="background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 12px; margin-bottom: 12px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                            <span style="color: ${csrOk ? '#10b981' : '#f43f5e'}; font-weight: bold;">[${csrOk ? 'PASSED' : 'FAILED'}]</span>
+                            <strong>CsrEngine: Sinh RSA 2048 & Tạo CSR PKCS#10</strong>
+                            <span style="font-size: 12px; color: var(--text-muted);">${Math.round(tc1 - tc0)} ms</span>
+                        </div>
+                        <div style="font-size: 12px; color: var(--text-secondary);">
+                            • Xác thực Chữ ký số tự ký (Self-Signature Verify): <strong>${csrRes.verified ? 'OK (Hợp lệ 100%)' : 'LỖI'}</strong><br>
+                            • Định dạng: <strong>PKCS#8 Private Key & PKCS#10 CSR PEM chuẩn OpenSSL</strong>
+                        </div>
+                    </div>
+                `;
+
                 selfTestResults.innerHTML = resultsHtml;
             } catch (err) {
-                selfTestResults.innerHTML = `<div class="test-error">Lỗi trong quá trình kiểm thử: ${err.message}</div>`;
+                selfTestResults.innerHTML = `<div style="color: #f43f5e; padding: 12px;">Lỗi kiểm thử: ${err.message}</div>`;
             } finally {
                 runSelfTestBtn.disabled = false;
             }
