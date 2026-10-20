@@ -1,23 +1,1102 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<ui version="4.0"><class>MainWindow</class><widget class="QMainWindow" name="MainWindow">
- <property name="geometry"><rect><x>0</x><y>0</y><width>1380</width><height>820</height></rect></property><property name="windowTitle"><string>CryptoLab — Qt/C++ File Security Workbench</string></property>
- <widget class="QWidget" name="centralwidget"><layout class="QHBoxLayout" name="rootLayout"><property name="spacing"><number>10</number></property><property name="leftMargin"><number>10</number></property><property name="topMargin"><number>10</number></property><property name="rightMargin"><number>10</number></property><property name="bottomMargin"><number>10</number></property>
-  <item><widget class="QWidget" name="controlPanel" native="true"><property name="minimumSize"><size><width>365</width><height>0</height></size></property><property name="maximumSize"><size><width>365</width><height>16777215</height></size></property><layout class="QVBoxLayout" name="controlLayout"><property name="spacing"><number>8</number></property><property name="leftMargin"><number>0</number></property><property name="topMargin"><number>0</number></property><property name="rightMargin"><number>0</number></property><property name="bottomMargin"><number>0</number></property>
-   <item><widget class="QLabel" name="titleLabel"><property name="text"><string>CRYPTOLAB</string></property></widget></item><item><widget class="QLabel" name="subtitleLabel"><property name="text"><string>File Security Workbench • Qt 6 / OpenSSL</string></property></widget></item>
-   <item><widget class="QGroupBox" name="modeGroup"><property name="title"><string>CHẾ ĐỘ</string></property><layout class="QHBoxLayout" name="modeLayout"><item><widget class="QRadioButton" name="encryptMode"><property name="text"><string>🔒 Mã hóa</string></property><property name="checked"><bool>true</bool></property></widget></item><item><widget class="QRadioButton" name="decryptMode"><property name="text"><string>🔓 Giải mã</string></property></widget></item></layout></widget></item>
-   <item><widget class="QGroupBox" name="sourceGroup"><property name="title"><string>TỆP / THƯ MỤC NGUỒN</string></property><layout class="QVBoxLayout" name="sourceLayout"><item><layout class="QHBoxLayout" name="inputLayout"><item><widget class="QLineEdit" name="inputEdit"><property name="placeholderText"><string>Kéo thả tệp hoặc thư mục...</string></property></widget></item><item><widget class="QPushButton" name="inputButton"><property name="text"><string>Tệp</string></property></widget></item><item><widget class="QPushButton" name="folderButton"><property name="text"><string>Thư mục</string></property></widget></item></layout></item><item><widget class="QLabel" name="fileInfoLabel"><property name="text"><string>Chưa chọn tệp hoặc thư mục</string></property><property name="wordWrap"><bool>true</bool></property></widget></item></layout></widget></item>
-   <item><widget class="QGroupBox" name="securityGroup"><property name="title"><string>BẢO MẬT</string></property><layout class="QFormLayout" name="securityLayout"><item row="0" column="0"><widget class="QLabel" name="algorithmLabel"><property name="text"><string>Thuật toán</string></property></widget></item><item row="0" column="1"><widget class="QComboBox" name="algorithmBox"/></item><item row="1" column="0"><widget class="QLabel" name="passwordLabel"><property name="text"><string>Mật khẩu</string></property></widget></item><item row="1" column="1"><widget class="QLineEdit" name="passwordEdit"><property name="echoMode"><enum>QLineEdit::EchoMode::Password</enum></property><property name="placeholderText"><string>Tối thiểu 8 ký tự</string></property></widget></item><item row="2" column="0" colspan="2"><widget class="QLabel" name="algorithmInfo"><property name="text"><string>AES-256-GCM • Có xác thực • Khuyến nghị</string></property><property name="wordWrap"><bool>true</bool></property></widget></item></layout></widget></item>
-   <item><widget class="QGroupBox" name="outputGroup"><property name="title"><string>TỆP KẾT QUẢ</string></property><layout class="QHBoxLayout" name="outputLayout"><item><widget class="QLineEdit" name="outputEdit"/></item><item><widget class="QPushButton" name="outputButton"><property name="text"><string>…</string></property></widget></item></layout></widget></item>
-   <item><widget class="QPushButton" name="runButton"><property name="text"><string>🔒 BẮT ĐẦU MÃ HÓA</string></property><property name="minimumSize"><size><width>0</width><height>44</height></size></property></widget></item>
-   <item><widget class="QProgressBar" name="progressBar"><property name="value"><number>0</number></property><property name="format"><string>%p% — Sẵn sàng</string></property></widget></item>
-   <item><widget class="QLabel" name="loadingLabel"><property name="text"><string>●  ○  ○   Đang chuẩn bị...</string></property><property name="alignment"><set>Qt::AlignmentFlag::AlignCenter</set></property><property name="visible"><bool>false</bool></property></widget></item>
-   <item><widget class="QLabel" name="statusLabel"><property name="text"><string>Sẵn sàng • Kéo thả tệp vào cửa sổ</string></property><property name="wordWrap"><bool>true</bool></property></widget></item>
-   <item><layout class="QHBoxLayout" name="openLayout"><item><widget class="QPushButton" name="openResultButton"><property name="enabled"><bool>false</bool></property><property name="text"><string>Mở kết quả</string></property></widget></item><item><widget class="QPushButton" name="openFolderButton"><property name="enabled"><bool>false</bool></property><property name="text"><string>Mở thư mục</string></property></widget></item></layout></item><item><spacer name="leftSpacer"><property name="orientation"><enum>Qt::Orientation::Vertical</enum></property><property name="sizeHint" stdset="0"><size><width>20</width><height>20</height></size></property></spacer></item>
-  </layout></widget></item>
-  <item><widget class="QWidget" name="workPanel" native="true"><layout class="QVBoxLayout" name="workLayout"><property name="spacing"><number>8</number></property><property name="leftMargin"><number>0</number></property><property name="topMargin"><number>0</number></property><property name="rightMargin"><number>0</number></property><property name="bottomMargin"><number>0</number></property>
-   <item><widget class="TransmissionWidget" name="transmissionWidget"/></item>
-   <item><widget class="QSplitter" name="previewSplitter"><property name="orientation"><enum>Qt::Orientation::Horizontal</enum></property><widget class="QGroupBox" name="sourcePreviewGroup"><property name="title"><string>NGUỒN • Xem trước</string></property><layout class="QVBoxLayout" name="sourcePreviewLayout"><item><widget class="FilePreview" name="sourcePreview" native="true"/></item></layout></widget><widget class="QGroupBox" name="resultPreviewGroup"><property name="title"><string>KẾT QUẢ • Xem trước</string></property><layout class="QVBoxLayout" name="resultPreviewLayout"><item><widget class="FilePreview" name="resultPreview" native="true"/></item></layout></widget></widget></item>
-   <item><widget class="QGroupBox" name="detailGroup"><property name="title"><string>NHẬT KÝ VÀ TÁC DỤNG THUẬT TOÁN</string></property><layout class="QVBoxLayout" name="detailLayout"><item><widget class="QPlainTextEdit" name="detailText"><property name="maximumSize"><size><width>16777215</width><height>150</height></size></property><property name="readOnly"><bool>true</bool></property><property name="plainText"><string>Chọn một tệp để xem quy trình bảo vệ dữ liệu.</string></property></widget></item></layout></widget></item>
-  </layout></widget></item>
- </layout></widget></widget>
- <customwidgets><customwidget><class>FilePreview</class><extends>QWidget</extends><header>filepreview.h</header><container>1</container></customwidget><customwidget><class>TransmissionWidget</class><extends>QWidget</extends><header>transmissionwidget.h</header><container>1</container></customwidget></customwidgets><resources/><connections/></ui>
+<ui version="4.0">
+ <class>MainWindow</class>
+ <widget class="QMainWindow" name="MainWindow">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>1420</width>
+    <height>880</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>CryptoLab — An Toàn Thông Tin &amp; Mật Mã Ứng Dụng (Qt 6 / OpenSSL)</string>
+  </property>
+  <widget class="QWidget" name="centralwidget">
+   <layout class="QVBoxLayout" name="mainVerticalLayout">
+    <property name="spacing">
+     <number>6</number>
+    </property>
+    <property name="leftMargin">
+     <number>10</number>
+    </property>
+    <property name="topMargin">
+     <number>8</number>
+    </property>
+    <property name="rightMargin">
+     <number>10</number>
+    </property>
+    <property name="bottomMargin">
+     <number>8</number>
+    </property>
+    <item>
+     <widget class="QTabWidget" name="mainTabWidget">
+      <property name="currentIndex">
+       <number>0</number>
+      </property>
+      <widget class="QWidget" name="tabCrypto">
+       <attribute name="title">
+        <string>🔐 1. Mã hóa / Giải mã Tập tin &amp; Văn bản</string>
+       </attribute>
+       <layout class="QHBoxLayout" name="cryptoTabLayout">
+        <property name="spacing">
+         <number>10</number>
+        </property>
+        <property name="leftMargin">
+         <number>6</number>
+        </property>
+        <property name="topMargin">
+         <number>6</number>
+        </property>
+        <property name="rightMargin">
+         <number>6</number>
+        </property>
+        <property name="bottomMargin">
+         <number>6</number>
+        </property>
+        <item>
+         <widget class="QWidget" name="controlPanel" native="true">
+          <property name="minimumSize">
+           <size>
+            <width>380</width>
+            <height>0</height>
+           </size>
+          </property>
+          <property name="maximumSize">
+           <size>
+            <width>395</width>
+            <height>16777215</height>
+           </size>
+          </property>
+          <layout class="QVBoxLayout" name="controlLayout">
+           <property name="spacing">
+            <number>6</number>
+           </property>
+           <property name="leftMargin">
+            <number>0</number>
+           </property>
+           <property name="topMargin">
+            <number>0</number>
+           </property>
+           <property name="rightMargin">
+            <number>0</number>
+           </property>
+           <property name="bottomMargin">
+            <number>0</number>
+           </property>
+           <item>
+            <widget class="QGroupBox" name="modeGroup">
+             <property name="title">
+              <string>CHẾ ĐỘ HOẠT ĐỘNG</string>
+             </property>
+             <layout class="QHBoxLayout" name="modeLayout">
+              <item>
+               <widget class="QRadioButton" name="encryptMode">
+                <property name="text">
+                 <string>🔒 Mã hóa</string>
+                </property>
+                <property name="checked">
+                 <bool>true</bool>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QRadioButton" name="decryptMode">
+                <property name="text">
+                 <string>🔓 Giải mã</string>
+                </property>
+               </widget>
+              </item>
+             </layout>
+            </widget>
+           </item>
+           <item>
+            <widget class="QGroupBox" name="inputTypeGroup">
+             <property name="title">
+              <string>LOẠI ĐẦU VÀO</string>
+             </property>
+             <layout class="QHBoxLayout" name="inputTypeLayout">
+              <item>
+               <widget class="QRadioButton" name="textModeRadio">
+                <property name="text">
+                 <string>✍️ Văn bản thuần (Plaintext)</string>
+                </property>
+                <property name="checked">
+                 <bool>true</bool>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QRadioButton" name="fileModeRadio">
+                <property name="text">
+                 <string>📁 Tệp / Thư mục</string>
+                </property>
+               </widget>
+              </item>
+             </layout>
+            </widget>
+           </item>
+           <item>
+            <widget class="QGroupBox" name="sourceGroup">
+             <property name="title">
+              <string>NỘI DUNG ĐẦU VÀO</string>
+             </property>
+             <layout class="QVBoxLayout" name="sourceLayout">
+              <property name="spacing">
+               <number>4</number>
+              </property>
+              <item>
+               <widget class="QStackedWidget" name="inputStack">
+                <property name="currentIndex">
+                 <number>0</number>
+                </property>
+                <widget class="QWidget" name="textInputPage">
+                 <layout class="QVBoxLayout" name="textInputLayout">
+                  <property name="leftMargin">
+                   <number>0</number>
+                  </property>
+                  <property name="topMargin">
+                   <number>0</number>
+                  </property>
+                  <property name="rightMargin">
+                   <number>0</number>
+                  </property>
+                  <property name="bottomMargin">
+                   <number>0</number>
+                  </property>
+                  <item>
+                   <widget class="QPlainTextEdit" name="textInputEdit">
+                    <property name="placeholderText">
+                     <string>Nhập chuỗi văn bản cần mã hóa (hoặc dán bản mã Hex/Base64 để giải mã)...</string>
+                    </property>
+                    <property name="plainText">
+                     <string>Bài thực hành Mật mã học OpenSSL: AES-256-CBC, Base64 (-a) và CSR.</string>
+                    </property>
+                   </widget>
+                  </item>
+                 </layout>
+                </widget>
+                <widget class="QWidget" name="fileInputPage">
+                 <layout class="QVBoxLayout" name="fileInputLayout">
+                  <property name="leftMargin">
+                   <number>0</number>
+                  </property>
+                  <property name="topMargin">
+                   <number>0</number>
+                  </property>
+                  <property name="rightMargin">
+                   <number>0</number>
+                  </property>
+                  <property name="bottomMargin">
+                   <number>0</number>
+                  </property>
+                  <item>
+                   <layout class="QHBoxLayout" name="inputRowLayout">
+                    <item>
+                     <widget class="QLineEdit" name="inputEdit">
+                      <property name="placeholderText">
+                       <string>Kéo thả tệp hoặc thư mục...</string>
+                      </property>
+                     </widget>
+                    </item>
+                    <item>
+                     <widget class="QPushButton" name="inputButton">
+                      <property name="text">
+                       <string>Tệp</string>
+                      </property>
+                     </widget>
+                    </item>
+                    <item>
+                     <widget class="QPushButton" name="folderButton">
+                      <property name="text">
+                       <string>Thư mục</string>
+                      </property>
+                     </widget>
+                    </item>
+                   </layout>
+                  </item>
+                  <item>
+                   <layout class="QHBoxLayout" name="outputRowLayout">
+                    <item>
+                     <widget class="QLineEdit" name="outputEdit">
+                      <property name="placeholderText">
+                       <string>Đường dẫn tệp kết quả...</string>
+                      </property>
+                     </widget>
+                    </item>
+                    <item>
+                     <widget class="QPushButton" name="outputButton">
+                      <property name="text">
+                       <string>…</string>
+                      </property>
+                     </widget>
+                    </item>
+                   </layout>
+                  </item>
+                  <item>
+                   <widget class="QLabel" name="fileInfoLabel">
+                    <property name="text">
+                     <string>Chưa chọn tệp hoặc thư mục</string>
+                    </property>
+                    <property name="wordWrap">
+                     <bool>true</bool>
+                    </property>
+                   </widget>
+                  </item>
+                 </layout>
+                </widget>
+               </widget>
+              </item>
+             </layout>
+            </widget>
+           </item>
+           <item>
+            <widget class="QGroupBox" name="securityGroup">
+             <property name="title">
+              <string>CẤU HÌNH THUẬT TOÁN &amp; BẢO MẬT</string>
+             </property>
+             <layout class="QFormLayout" name="securityLayout">
+              <item row="0" column="0">
+               <widget class="QLabel" name="algorithmLabel">
+                <property name="text">
+                 <string>Thuật toán</string>
+                </property>
+               </widget>
+              </item>
+              <item row="0" column="1">
+               <widget class="QComboBox" name="algorithmBox"/>
+              </item>
+              <item row="1" column="0">
+               <widget class="QLabel" name="passwordLabel">
+                <property name="text">
+                 <string>Mật khẩu</string>
+                </property>
+               </widget>
+              </item>
+              <item row="1" column="1">
+               <widget class="QLineEdit" name="passwordEdit">
+                <property name="echoMode">
+                 <enum>QLineEdit::EchoMode::Password</enum>
+                </property>
+                <property name="placeholderText">
+                 <string>Nhập mật khẩu an toàn...</string>
+                </property>
+                <property name="text">
+                 <string>MatKhauLab2026</string>
+                </property>
+               </widget>
+              </item>
+              <item row="2" column="0" colspan="2">
+               <widget class="QCheckBox" name="base64Check">
+                <property name="text">
+                 <string>Mã hóa Base64 (Tương đương cờ -a trong CLI)</string>
+                </property>
+                <property name="checked">
+                 <bool>true</bool>
+                </property>
+               </widget>
+              </item>
+              <item row="3" column="0" colspan="2">
+               <widget class="QLabel" name="algorithmInfo">
+                <property name="text">
+                 <string>AES-256-CBC • Chuẩn bài giảng OpenSSL • PBKDF2</string>
+                </property>
+                <property name="wordWrap">
+                 <bool>true</bool>
+                </property>
+               </widget>
+              </item>
+             </layout>
+            </widget>
+           </item>
+           <item>
+            <widget class="QPushButton" name="runButton">
+             <property name="minimumSize">
+              <size>
+               <width>0</width>
+               <height>42</height>
+              </size>
+             </property>
+             <property name="text">
+              <string>🔒 BẮT ĐẦU MÃ HÓA</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QProgressBar" name="progressBar">
+             <property name="value">
+              <number>0</number>
+             </property>
+             <property name="format">
+              <string>%p% — Sẵn sàng</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QLabel" name="loadingLabel">
+             <property name="text">
+              <string>●  ○  ○   Đang chuẩn bị...</string>
+             </property>
+             <property name="alignment">
+              <set>Qt::AlignmentFlag::AlignCenter</set>
+             </property>
+             <property name="visible">
+              <bool>false</bool>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QLabel" name="statusLabel">
+             <property name="text">
+              <string>Sẵn sàng • Nhập văn bản hoặc chọn tệp để bắt đầu</string>
+             </property>
+             <property name="wordWrap">
+              <bool>true</bool>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QWidget" name="fileActionWidget" native="true">
+             <layout class="QHBoxLayout" name="openLayout">
+              <property name="leftMargin">
+               <number>0</number>
+              </property>
+              <property name="topMargin">
+               <number>0</number>
+              </property>
+              <property name="rightMargin">
+               <number>0</number>
+              </property>
+              <property name="bottomMargin">
+               <number>0</number>
+              </property>
+              <item>
+               <widget class="QPushButton" name="openResultButton">
+                <property name="enabled">
+                 <bool>false</bool>
+                </property>
+                <property name="text">
+                 <string>Mở kết quả</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QPushButton" name="openFolderButton">
+                <property name="enabled">
+                 <bool>false</bool>
+                </property>
+                <property name="text">
+                 <string>Mở thư mục</string>
+                </property>
+               </widget>
+              </item>
+             </layout>
+            </widget>
+           </item>
+           <item>
+            <spacer name="leftSpacer">
+             <property name="orientation">
+              <enum>Qt::Orientation::Vertical</enum>
+             </property>
+             <property name="sizeHint" stdset="0">
+              <size>
+               <width>20</width>
+               <height>10</height>
+              </size>
+             </property>
+            </spacer>
+           </item>
+          </layout>
+         </widget>
+        </item>
+        <item>
+         <widget class="QWidget" name="workPanel" native="true">
+          <layout class="QVBoxLayout" name="workLayout">
+           <property name="spacing">
+            <number>6</number>
+           </property>
+           <property name="leftMargin">
+            <number>0</number>
+           </property>
+           <property name="topMargin">
+            <number>0</number>
+           </property>
+           <property name="rightMargin">
+            <number>0</number>
+           </property>
+           <property name="bottomMargin">
+            <number>0</number>
+           </property>
+           <item>
+            <widget class="TransmissionWidget" name="transmissionWidget" native="true"/>
+           </item>
+           <item>
+            <widget class="QStackedWidget" name="outputStack">
+             <property name="currentIndex">
+              <number>0</number>
+             </property>
+             <widget class="QWidget" name="textOutputPage">
+              <layout class="QVBoxLayout" name="textOutputLayout">
+               <property name="leftMargin">
+                <number>0</number>
+               </property>
+               <property name="topMargin">
+                <number>0</number>
+               </property>
+               <property name="rightMargin">
+                <number>0</number>
+               </property>
+               <property name="bottomMargin">
+                <number>0</number>
+               </property>
+               <item>
+                <widget class="QSplitter" name="textOutputSplitter">
+                 <property name="orientation">
+                  <enum>Qt::Orientation::Horizontal</enum>
+                 </property>
+                 <widget class="QGroupBox" name="hexGroup">
+                  <property name="title">
+                   <string>MÃ HEX (DỮ LIỆU NHỊ PHÂN SAU MÃ HÓA)</string>
+                  </property>
+                  <layout class="QVBoxLayout" name="hexLayout">
+                   <item>
+                    <widget class="QPlainTextEdit" name="hexOutputEdit">
+                     <property name="readOnly">
+                      <bool>true</bool>
+                     </property>
+                     <property name="placeholderText">
+                      <string>Dữ liệu nhị phân sau khi mã hóa sẽ hiển thị dưới dạng mã Hex...</string>
+                     </property>
+                    </widget>
+                   </item>
+                   <item>
+                    <layout class="QHBoxLayout" name="hexActionLayout">
+                     <item>
+                      <spacer name="hexSpacer">
+                       <property name="orientation">
+                        <enum>Qt::Orientation::Horizontal</enum>
+                       </property>
+                       <property name="sizeHint" stdset="0">
+                        <size>
+                         <width>40</width>
+                         <height>20</height>
+                        </size>
+                       </property>
+                      </spacer>
+                     </item>
+                     <item>
+                      <widget class="QPushButton" name="copyHexButton">
+                       <property name="text">
+                        <string>📋 Sao chép HEX</string>
+                       </property>
+                      </widget>
+                     </item>
+                    </layout>
+                   </item>
+                  </layout>
+                 </widget>
+                 <widget class="QGroupBox" name="base64Group">
+                  <property name="title">
+                   <string>CHUỖI BASE64 (DẠNG MÃ HÓA VĂN BẢN — CỜ -a)</string>
+                  </property>
+                  <layout class="QVBoxLayout" name="base64Layout">
+                   <item>
+                    <widget class="QPlainTextEdit" name="base64OutputEdit">
+                     <property name="readOnly">
+                      <bool>true</bool>
+                     </property>
+                     <property name="placeholderText">
+                      <string>Dữ liệu Base64 an toàn để truyền qua văn bản (ASCII armor - cờ -a)...</string>
+                     </property>
+                    </widget>
+                   </item>
+                   <item>
+                    <layout class="QHBoxLayout" name="base64ActionLayout">
+                     <item>
+                      <spacer name="base64Spacer">
+                       <property name="orientation">
+                        <enum>Qt::Orientation::Horizontal</enum>
+                       </property>
+                       <property name="sizeHint" stdset="0">
+                        <size>
+                         <width>40</width>
+                         <height>20</height>
+                        </size>
+                       </property>
+                      </spacer>
+                     </item>
+                     <item>
+                      <widget class="QPushButton" name="copyBase64Button">
+                       <property name="text">
+                        <string>📋 Sao chép Base64</string>
+                       </property>
+                      </widget>
+                     </item>
+                    </layout>
+                   </item>
+                  </layout>
+                 </widget>
+                </widget>
+               </item>
+              </layout>
+             </widget>
+             <widget class="QWidget" name="fileOutputPage">
+              <layout class="QVBoxLayout" name="fileOutputLayout">
+               <property name="leftMargin">
+                <number>0</number>
+               </property>
+               <property name="topMargin">
+                <number>0</number>
+               </property>
+               <property name="rightMargin">
+                <number>0</number>
+               </property>
+               <property name="bottomMargin">
+                <number>0</number>
+               </property>
+               <item>
+                <widget class="QSplitter" name="previewSplitter">
+                 <property name="orientation">
+                  <enum>Qt::Orientation::Horizontal</enum>
+                 </property>
+                 <widget class="QGroupBox" name="sourcePreviewGroup">
+                  <property name="title">
+                   <string>NGUỒN • Xem trước</string>
+                  </property>
+                  <layout class="QVBoxLayout" name="sourcePreviewLayout">
+                   <item>
+                    <widget class="FilePreview" name="sourcePreview" native="true"/>
+                   </item>
+                  </layout>
+                 </widget>
+                 <widget class="QGroupBox" name="resultPreviewGroup">
+                  <property name="title">
+                   <string>KẾT QUẢ • Xem trước</string>
+                  </property>
+                  <layout class="QVBoxLayout" name="resultPreviewLayout">
+                   <item>
+                    <widget class="FilePreview" name="resultPreview" native="true"/>
+                   </item>
+                  </layout>
+                 </widget>
+                </widget>
+               </item>
+              </layout>
+             </widget>
+            </widget>
+           </item>
+           <item>
+            <widget class="QGroupBox" name="cliGroup">
+             <property name="title">
+              <string>LỆNH OPENSSL CLI TƯƠNG ĐƯƠNG (BÀI HỌC THỰC HÀNH)</string>
+             </property>
+             <layout class="QHBoxLayout" name="cliLayout">
+              <item>
+               <widget class="QLineEdit" name="cliCommandEdit">
+                <property name="readOnly">
+                 <bool>true</bool>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QPushButton" name="copyCliButton">
+                <property name="text">
+                 <string>📋 Sao chép lệnh CLI</string>
+                </property>
+               </widget>
+              </item>
+             </layout>
+            </widget>
+           </item>
+           <item>
+            <widget class="QGroupBox" name="detailGroup">
+             <property name="title">
+              <string>NHẬT KÝ VÀ TÁC DỤNG THUẬT TOÁN (OPENSSL EVP API)</string>
+             </property>
+             <layout class="QVBoxLayout" name="detailLayout">
+              <item>
+               <widget class="QPlainTextEdit" name="detailText">
+                <property name="maximumSize">
+                 <size>
+                  <width>16777215</width>
+                  <height>120</height>
+                 </size>
+                </property>
+                <property name="readOnly">
+                 <bool>true</bool>
+                </property>
+                <property name="plainText">
+                 <string>Mã hóa dữ liệu với OpenSSL EVP API kết hợp dẫn xuất khóa PBKDF2-HMAC-SHA256.</string>
+                </property>
+               </widget>
+              </item>
+             </layout>
+            </widget>
+           </item>
+          </layout>
+         </widget>
+        </item>
+       </layout>
+      </widget>
+      <widget class="QWidget" name="tabCsr">
+       <attribute name="title">
+        <string>📜 2. Tạo Yêu cầu Chứng chỉ CSR &amp; Cặp Khóa (PKI / X.509)</string>
+       </attribute>
+       <layout class="QHBoxLayout" name="csrTabLayout">
+        <property name="spacing">
+         <number>10</number>
+        </property>
+        <property name="leftMargin">
+         <number>6</number>
+        </property>
+        <property name="topMargin">
+         <number>6</number>
+        </property>
+        <property name="rightMargin">
+         <number>6</number>
+        </property>
+        <property name="bottomMargin">
+         <number>6</number>
+        </property>
+        <item>
+         <widget class="QWidget" name="csrControlPanel" native="true">
+          <property name="minimumSize">
+           <size>
+            <width>380</width>
+            <height>0</height>
+           </size>
+          </property>
+          <property name="maximumSize">
+           <size>
+            <width>395</width>
+            <height>16777215</height>
+           </size>
+          </property>
+          <layout class="QVBoxLayout" name="csrControlLayout">
+           <property name="spacing">
+            <number>6</number>
+           </property>
+           <property name="leftMargin">
+            <number>0</number>
+           </property>
+           <property name="topMargin">
+            <number>0</number>
+           </property>
+           <property name="rightMargin">
+            <number>0</number>
+           </property>
+           <property name="bottomMargin">
+            <number>0</number>
+           </property>
+           <item>
+            <widget class="QGroupBox" name="csrSubjectGroup">
+             <property name="title">
+              <string>THÔNG TIN CHỦ THỂ (X.509 SUBJECT DN)</string>
+             </property>
+             <layout class="QFormLayout" name="csrSubjectLayout">
+              <property name="horizontalSpacing">
+               <number>8</number>
+              </property>
+              <property name="verticalSpacing">
+               <number>6</number>
+              </property>
+              <item row="0" column="0">
+               <widget class="QLabel" name="csrCnLabel">
+                <property name="text">
+                 <string>Common Name (CN)*</string>
+                </property>
+               </widget>
+              </item>
+              <item row="0" column="1">
+               <widget class="QLineEdit" name="csrCnEdit">
+                <property name="placeholderText">
+                 <string>example.com hoặc sinhvien.edu.vn</string>
+                </property>
+                <property name="text">
+                 <string>cryptolab.local</string>
+                </property>
+               </widget>
+              </item>
+              <item row="1" column="0">
+               <widget class="QLabel" name="csrOLabel">
+                <property name="text">
+                 <string>Organization (O)</string>
+                </property>
+               </widget>
+              </item>
+              <item row="1" column="1">
+               <widget class="QLineEdit" name="csrOEdit">
+                <property name="placeholderText">
+                 <string>Tên công ty hoặc Trường ĐH</string>
+                </property>
+                <property name="text">
+                 <string>CryptoLab Security Academy</string>
+                </property>
+               </widget>
+              </item>
+              <item row="2" column="0">
+               <widget class="QLabel" name="csrOuLabel">
+                <property name="text">
+                 <string>Department (OU)</string>
+                </property>
+               </widget>
+              </item>
+              <item row="2" column="1">
+               <widget class="QLineEdit" name="csrOuEdit">
+                <property name="placeholderText">
+                 <string>Khoa CNTT / An Toàn Thông Tin</string>
+                </property>
+                <property name="text">
+                 <string>Cyber Security Lab</string>
+                </property>
+               </widget>
+              </item>
+              <item row="3" column="0">
+               <widget class="QLabel" name="csrCLabel">
+                <property name="text">
+                 <string>Country (C)</string>
+                </property>
+               </widget>
+              </item>
+              <item row="3" column="1">
+               <widget class="QLineEdit" name="csrCEdit">
+                <property name="maxLength">
+                 <number>2</number>
+                </property>
+                <property name="placeholderText">
+                 <string>Mã 2 ký tự (VN, US, JP...)</string>
+                </property>
+                <property name="text">
+                 <string>VN</string>
+                </property>
+               </widget>
+              </item>
+              <item row="4" column="0">
+               <widget class="QLabel" name="csrStLabel">
+                <property name="text">
+                 <string>State / Province (ST)</string>
+                </property>
+               </widget>
+              </item>
+              <item row="4" column="1">
+               <widget class="QLineEdit" name="csrStEdit">
+                <property name="placeholderText">
+                 <string>Tỉnh / Thành phố</string>
+                </property>
+                <property name="text">
+                 <string>Ha Noi</string>
+                </property>
+               </widget>
+              </item>
+              <item row="5" column="0">
+               <widget class="QLabel" name="csrLLabel">
+                <property name="text">
+                 <string>Locality / City (L)</string>
+                </property>
+               </widget>
+              </item>
+              <item row="5" column="1">
+               <widget class="QLineEdit" name="csrLEdit">
+                <property name="placeholderText">
+                 <string>Quận / Huyện</string>
+                </property>
+                <property name="text">
+                 <string>Cau Giay</string>
+                </property>
+               </widget>
+              </item>
+              <item row="6" column="0">
+               <widget class="QLabel" name="csrEmailLabel">
+                <property name="text">
+                 <string>Email Address</string>
+                </property>
+               </widget>
+              </item>
+              <item row="6" column="1">
+               <widget class="QLineEdit" name="csrEmailEdit">
+                <property name="placeholderText">
+                 <string>admin@cryptolab.local</string>
+                </property>
+                <property name="text">
+                 <string>security@cryptolab.local</string>
+                </property>
+               </widget>
+              </item>
+             </layout>
+            </widget>
+           </item>
+           <item>
+            <widget class="QGroupBox" name="csrKeyConfigGroup">
+             <property name="title">
+              <string>CẤU HÌNH CẶP KHÓA &amp; BĂM KÝ SỐ</string>
+             </property>
+             <layout class="QFormLayout" name="csrKeyConfigLayout">
+              <item row="0" column="0">
+               <widget class="QLabel" name="csrKeyTypeLabel">
+                <property name="text">
+                 <string>Loại cặp khóa</string>
+                </property>
+               </widget>
+              </item>
+              <item row="0" column="1">
+               <widget class="QComboBox" name="csrKeyTypeCombo"/>
+              </item>
+              <item row="1" column="0">
+               <widget class="QLabel" name="csrDigestLabel">
+                <property name="text">
+                 <string>Hàm băm ký số</string>
+                </property>
+               </widget>
+              </item>
+              <item row="1" column="1">
+               <widget class="QComboBox" name="csrDigestCombo"/>
+              </item>
+             </layout>
+            </widget>
+           </item>
+           <item>
+            <widget class="QPushButton" name="csrGenerateButton">
+             <property name="minimumSize">
+              <size>
+               <width>0</width>
+               <height>42</height>
+              </size>
+             </property>
+             <property name="text">
+              <string>🔑 SINH CẶP KHÓA &amp; TẠO CSR</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <layout class="QHBoxLayout" name="csrSaveLayout">
+             <item>
+              <widget class="QPushButton" name="csrSaveKeyButton">
+               <property name="enabled">
+                <bool>false</bool>
+               </property>
+               <property name="text">
+                <string>💾 Lưu Khóa (.key)</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QPushButton" name="csrSaveCsrButton">
+               <property name="enabled">
+                <bool>false</bool>
+               </property>
+               <property name="text">
+                <string>💾 Lưu CSR (.csr)</string>
+               </property>
+              </widget>
+             </item>
+            </layout>
+           </item>
+           <item>
+            <widget class="QLabel" name="csrStatusLabel">
+             <property name="text">
+              <string>Sẵn sàng • Nhấn nút để sinh khóa và tạo yêu cầu CSR</string>
+             </property>
+             <property name="wordWrap">
+              <bool>true</bool>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <spacer name="csrLeftSpacer">
+             <property name="orientation">
+              <enum>Qt::Orientation::Vertical</enum>
+             </property>
+             <property name="sizeHint" stdset="0">
+              <size>
+               <width>20</width>
+               <height>20</height>
+              </size>
+             </property>
+            </spacer>
+           </item>
+          </layout>
+         </widget>
+        </item>
+        <item>
+         <widget class="QWidget" name="csrWorkPanel" native="true">
+          <layout class="QVBoxLayout" name="csrWorkLayout">
+           <property name="spacing">
+            <number>6</number>
+           </property>
+           <property name="leftMargin">
+            <number>0</number>
+           </property>
+           <property name="topMargin">
+            <number>0</number>
+           </property>
+           <property name="rightMargin">
+            <number>0</number>
+           </property>
+           <property name="bottomMargin">
+            <number>0</number>
+           </property>
+           <item>
+            <widget class="QSplitter" name="csrOutputSplitter">
+             <property name="orientation">
+              <enum>Qt::Orientation::Horizontal</enum>
+             </property>
+             <widget class="QGroupBox" name="csrKeyGroup">
+              <property name="title">
+               <string>KHÓA RIÊNG TƯ (PRIVATE KEY — ĐỊNH DẠNG PEM)</string>
+              </property>
+              <layout class="QVBoxLayout" name="csrKeyGroupLayout">
+               <item>
+                <widget class="QPlainTextEdit" name="csrKeyEdit">
+                 <property name="readOnly">
+                  <bool>true</bool>
+                 </property>
+                 <property name="placeholderText">
+                  <string>Khóa bí mật (Private Key) được sinh ngẫu nhiên an toàn bằng OpenSSL EVP API...</string>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <layout class="QHBoxLayout" name="copyKeyLayout">
+                 <item>
+                  <spacer name="copyKeySpacer">
+                   <property name="orientation">
+                    <enum>Qt::Orientation::Horizontal</enum>
+                   </property>
+                   <property name="sizeHint" stdset="0">
+                    <size>
+                     <width>40</width>
+                     <height>20</height>
+                    </size>
+                   </property>
+                  </spacer>
+                 </item>
+                 <item>
+                  <widget class="QPushButton" name="copyKeyButton">
+                   <property name="text">
+                    <string>📋 Sao chép Khóa</string>
+                   </property>
+                  </widget>
+                 </item>
+                </layout>
+               </item>
+              </layout>
+             </widget>
+             <widget class="QGroupBox" name="csrReqGroup">
+              <property name="title">
+               <string>YÊU CẦU CHỨNG CHỈ (CSR — ĐỊNH DẠNG PEM)</string>
+              </property>
+              <layout class="QVBoxLayout" name="csrReqGroupLayout">
+               <item>
+                <widget class="QPlainTextEdit" name="csrOutputEdit">
+                 <property name="readOnly">
+                  <bool>true</bool>
+                 </property>
+                 <property name="placeholderText">
+                  <string>Chứng chỉ yêu cầu CSR (Certificate Signing Request) sẵn sàng gửi đến CA...</string>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <layout class="QHBoxLayout" name="copyCsrLayout">
+                 <item>
+                  <spacer name="copyCsrSpacer">
+                   <property name="orientation">
+                    <enum>Qt::Orientation::Horizontal</enum>
+                   </property>
+                   <property name="sizeHint" stdset="0">
+                    <size>
+                     <width>40</width>
+                     <height>20</height>
+                    </size>
+                   </property>
+                  </spacer>
+                 </item>
+                 <item>
+                  <widget class="QPushButton" name="copyCsrButton">
+                   <property name="text">
+                    <string>📋 Sao chép CSR</string>
+                   </property>
+                  </widget>
+                 </item>
+                </layout>
+               </item>
+              </layout>
+             </widget>
+            </widget>
+           </item>
+           <item>
+            <widget class="QGroupBox" name="csrCliGroup">
+             <property name="title">
+              <string>LỆNH OPENSSL CLI TƯƠNG ĐƯƠNG</string>
+             </property>
+             <layout class="QHBoxLayout" name="csrCliLayout">
+              <item>
+               <widget class="QLineEdit" name="csrCliEdit">
+                <property name="readOnly">
+                 <bool>true</bool>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QPushButton" name="copyCsrCliButton">
+                <property name="text">
+                 <string>📋 Sao chép lệnh CLI</string>
+                </property>
+               </widget>
+              </item>
+             </layout>
+            </widget>
+           </item>
+           <item>
+            <widget class="QGroupBox" name="csrDetailsGroup">
+             <property name="title">
+              <string>CHI TIẾT PHÂN TÍCH CẤU TRÚC X.509 CSR (ASN.1 PARSER)</string>
+             </property>
+             <layout class="QVBoxLayout" name="csrDetailsLayout">
+              <item>
+               <widget class="QPlainTextEdit" name="csrDetailsEdit">
+                <property name="maximumSize">
+                 <size>
+                  <width>16777215</width>
+                  <height>140</height>
+                 </size>
+                </property>
+                <property name="readOnly">
+                 <bool>true</bool>
+                </property>
+                <property name="placeholderText">
+                 <string>Thông tin giải mã cấu trúc ASN.1/X.509 của CSR sau khi sinh...</string>
+                </property>
+               </widget>
+              </item>
+             </layout>
+            </widget>
+           </item>
+          </layout>
+         </widget>
+        </item>
+       </layout>
+      </widget>
+     </widget>
+    </item>
+   </layout>
+  </widget>
+ </widget>
+ <customwidgets>
+  <customwidget>
+   <class>FilePreview</class>
+   <extends>QWidget</extends>
+   <header>filepreview.h</header>
+   <container>1</container>
+  </customwidget>
+  <customwidget>
+   <class>TransmissionWidget</class>
+   <extends>QWidget</extends>
+   <header>transmissionwidget.h</header>
+   <container>1</container>
+  </customwidget>
+ </customwidgets>
+ <resources/>
+ <connections/>
+</ui>
